@@ -1,2 +1,4 @@
 org.jszip.jetty
 org.jszip.maven
+org.jszip.pseudo.io
+org.jszip.rhino
