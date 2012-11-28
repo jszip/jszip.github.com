@@ -198,7 +198,7 @@ Java HotSpot(TM) 64-Bit Server VM (build 23.3-b01, mixed mode)
 <div class="source"><pre class="prettyprint linenums">$ mvn -version
 Apache Maven 3.0.4 (r1232337; 2012-01-17 08:44:56+0000)
 ...
-</pre></div><div class="section"><h2>Create a root module<a name="Create_a_root_module"></a></h2><p>Use your favourite editor to create a file called <tt>pom.xml</tt> in a new directory that will hold this project. The file should look like this:</p>
+</pre></div><div class="section"><h2>Lazy?<a name="Lazy"></a></h2><p>The source code from this example is available on <a class="externalLink" href="https://github.com/jszip/quickstart-basic">Github</a></p></div><div class="section"><h2>Create a root module<a name="Create_a_root_module"></a></h2><p>Use your favourite editor to create a file called <tt>pom.xml</tt> in a new directory that will hold this project. The file should look like this:</p>
 <div class="source"><pre class="prettyprint linenums">&lt;project xmlns=&quot;http://maven.apache.org/POM/4.0.0&quot; xmlns:xsi=&quot;http://www.w3.org/2001/XMLSchema-instance&quot;
          xsi:schemaLocation=&quot;http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd&quot;&gt;
   &lt;modelVersion&gt;4.0.0&lt;/modelVersion&gt;
@@ -571,7 +571,20 @@ $ mkdir -p webapp/src/build/js
 &lt;script type=&quot;text/javascript&quot; src=&quot;scripts/main.js&quot;&gt;&lt;/script&gt;
 &lt;/body&gt;
 &lt;/html&gt;
-</pre></div><p><i>Note:</i> we could have just as easily put the HTML page in the client modules resources, i.e. at <tt>client/src/main/resources/index.html</tt></p></div><div class="section"><h2>Start it up<a name="Start_it_up"></a></h2><p>Were going to start it up at the in live development mode. We dont know the state of the tests, so were not going to bother with running them, we just want to be able to play with the files.</p>
+</pre></div><p><i>Note:</i> we could have just as easily put the HTML page in the client modules resources, i.e. at <tt>client/src/main/resources/index.html</tt></p></div><div class="section"><h2>Start it up<a name="Start_it_up"></a></h2><p>Here is what your file structure should be at this point:</p>
+<div class="source"><pre class="prettyprint linenums">pom.xml
+client/pom.xml
+client/src/main/js/scripts/main.js
+client/src/main/resources/stylesheets/main.css
+server/pom.xml
+server/src/main/java/localhost/quickstart/Api.java
+server/src/main/java/localhost/quickstart/Greeter.java
+server/src/test/java/localhost/quickstart/GreeterTest.java
+webapp/pom.xml
+webapp/src/build/js/profile.js
+webapp/src/main/webapp/index.html
+webapp/src/main/webapp/WEB-INF/web.xml
+</pre></div><p>Were going to start it up at the in live development mode. We dont know the state of the tests, so were not going to bother with running them, we just want to be able to play with the files.</p>
 <div class="source"><pre class="prettyprint linenums">$ mvn compile jszip:run
 [INFO] Scanning for projects...
 [INFO] ------------------------------------------------------------------------
@@ -602,6 +615,7 @@ INFO: Instantiated the Application class localhost.quickstart.Api
   <li>Changes to the <tt>&lt;packaging&gt;jszip&lt;/packaging&gt;</tt> module content (i.e. <tt>.js</tt> files and associated content) are  reflected instantly.</li>
   <li>Changes to the <tt>.class</tt> files are subject to a quiet period delay. In practical terms this means count to ten  then hit reload.</li>
   <li>Changes to the <tt>pom.xml</tt> files are subject to a quiet period delay. In practical terms this means count to five,  check the shell window to see that the JSZip plugin was able to apply the change, then hit reload. (Some changes  to the <tt>pom.xml</tt> cannot be reflected in live development mode as they affect the sequence of the reactor, with  the result that the reactor has to be restarted)</li>
+  <li>If the lifecycle is advanced to the <tt>package</tt> phase or beyond, then you will no longer be in &#x201c;Live development&#x201d;  mode as the reactor will have replaced the attached directories with the built <tt>.zip</tt> and <tt>.jar</tt> files. If you can  convince your IDE or a second Maven instance to rebuild those files though, then the changes will be picked up live.</li>
 </ol></div><div class="section"><h3>Making the optimized release build<a name="Making_the_optimized_release_build"></a></h3><p>To make the release build we just build with the <tt>release</tt> profile active.</p>
 <div class="source"><pre class="prettyprint linenums">$ mvn -Prelease clean package
 </pre></div><p>If we then take a look at the JavaScript file that is bundled within the web application, we will see that it is now a minified versions:</p>
