@@ -19,159 +19,257 @@
 <FONT color="green">016</FONT>    <a name="line.16"></a>
 <FONT color="green">017</FONT>    package org.jszip.rhino;<a name="line.17"></a>
 <FONT color="green">018</FONT>    <a name="line.18"></a>
-<FONT color="green">019</FONT>    import org.apache.maven.plugin.logging.Log;<a name="line.19"></a>
-<FONT color="green">020</FONT>    import org.codehaus.plexus.util.StringUtils;<a name="line.20"></a>
-<FONT color="green">021</FONT>    import org.jszip.pseudo.io.PseudoFile;<a name="line.21"></a>
+<FONT color="green">019</FONT>    import org.apache.commons.lang3.StringUtils;<a name="line.19"></a>
+<FONT color="green">020</FONT>    import org.apache.maven.plugin.logging.Log;<a name="line.20"></a>
+<FONT color="green">021</FONT>    import org.codehaus.plexus.util.FileUtils;<a name="line.21"></a>
 <FONT color="green">022</FONT>    import org.jszip.pseudo.io.ProxyPseudoFile;<a name="line.22"></a>
-<FONT color="green">023</FONT>    import org.jszip.pseudo.io.PseudoFileInputStream;<a name="line.23"></a>
-<FONT color="green">024</FONT>    import org.jszip.pseudo.io.PseudoFileOutputStream;<a name="line.24"></a>
-<FONT color="green">025</FONT>    import org.jszip.pseudo.io.PseudoFileSystem;<a name="line.25"></a>
-<FONT color="green">026</FONT>    import org.mozilla.javascript.Context;<a name="line.26"></a>
-<FONT color="green">027</FONT>    import org.mozilla.javascript.ContextAction;<a name="line.27"></a>
-<FONT color="green">028</FONT>    import org.mozilla.javascript.Function;<a name="line.28"></a>
-<FONT color="green">029</FONT>    import org.mozilla.javascript.NativeJavaPackage;<a name="line.29"></a>
-<FONT color="green">030</FONT>    import org.mozilla.javascript.NativeJavaTopPackage;<a name="line.30"></a>
-<FONT color="green">031</FONT>    import org.mozilla.javascript.Script;<a name="line.31"></a>
-<FONT color="green">032</FONT>    import org.mozilla.javascript.Scriptable;<a name="line.32"></a>
-<FONT color="green">033</FONT>    import org.mozilla.javascript.ScriptableObject;<a name="line.33"></a>
-<FONT color="green">034</FONT>    import org.mozilla.javascript.tools.shell.Global;<a name="line.34"></a>
-<FONT color="green">035</FONT>    <a name="line.35"></a>
-<FONT color="green">036</FONT>    import java.io.File;<a name="line.36"></a>
-<FONT color="green">037</FONT>    import java.util.Arrays;<a name="line.37"></a>
-<FONT color="green">038</FONT>    import java.util.Iterator;<a name="line.38"></a>
-<FONT color="green">039</FONT>    import java.util.Stack;<a name="line.39"></a>
-<FONT color="green">040</FONT>    <a name="line.40"></a>
-<FONT color="green">041</FONT>    /**<a name="line.41"></a>
-<FONT color="green">042</FONT>     * An action for running r.js against a virtual filesystem.<a name="line.42"></a>
-<FONT color="green">043</FONT>     */<a name="line.43"></a>
-<FONT color="green">044</FONT>    public class OptimizeContextAction extends ScriptableObject implements ContextAction {<a name="line.44"></a>
-<FONT color="green">045</FONT>        private final Global global;<a name="line.45"></a>
-<FONT color="green">046</FONT>        private final File profileJs;<a name="line.46"></a>
-<FONT color="green">047</FONT>        private final String source;<a name="line.47"></a>
-<FONT color="green">048</FONT>        private final int lineNo;<a name="line.48"></a>
-<FONT color="green">049</FONT>        private final PseudoFileSystem.Layer[] layers;<a name="line.49"></a>
-<FONT color="green">050</FONT>        private final Log log;<a name="line.50"></a>
-<FONT color="green">051</FONT>    <a name="line.51"></a>
-<FONT color="green">052</FONT>        public OptimizeContextAction(Log log, Global global, File profileJs, String source, int lineNo,<a name="line.52"></a>
-<FONT color="green">053</FONT>                                     PseudoFileSystem.Layer... layers) {<a name="line.53"></a>
-<FONT color="green">054</FONT>            this.log = log;<a name="line.54"></a>
-<FONT color="green">055</FONT>            this.global = global;<a name="line.55"></a>
-<FONT color="green">056</FONT>            this.profileJs = profileJs;<a name="line.56"></a>
-<FONT color="green">057</FONT>            this.source = source;<a name="line.57"></a>
-<FONT color="green">058</FONT>            this.lineNo = lineNo;<a name="line.58"></a>
-<FONT color="green">059</FONT>            this.layers = layers;<a name="line.59"></a>
-<FONT color="green">060</FONT>        }<a name="line.60"></a>
-<FONT color="green">061</FONT>    <a name="line.61"></a>
-<FONT color="green">062</FONT>        public Object run(Context context) {<a name="line.62"></a>
-<FONT color="green">063</FONT>            context.setErrorReporter(new MavenLogErrorReporter(log));<a name="line.63"></a>
-<FONT color="green">064</FONT>            PseudoFileSystem fileSystem = new PseudoFileSystem(layers);<a name="line.64"></a>
-<FONT color="green">065</FONT>            context.putThreadLocal(OptimizeContextAction.class, log);<a name="line.65"></a>
-<FONT color="green">066</FONT>            fileSystem.installInContext();<a name="line.66"></a>
-<FONT color="green">067</FONT>            try {<a name="line.67"></a>
+<FONT color="green">023</FONT>    import org.jszip.pseudo.io.PseudoFile;<a name="line.23"></a>
+<FONT color="green">024</FONT>    import org.jszip.pseudo.io.PseudoFileInputStream;<a name="line.24"></a>
+<FONT color="green">025</FONT>    import org.jszip.pseudo.io.PseudoFileOutputStream;<a name="line.25"></a>
+<FONT color="green">026</FONT>    import org.jszip.pseudo.io.PseudoFileSystem;<a name="line.26"></a>
+<FONT color="green">027</FONT>    import org.mozilla.javascript.Context;<a name="line.27"></a>
+<FONT color="green">028</FONT>    import org.mozilla.javascript.ContextAction;<a name="line.28"></a>
+<FONT color="green">029</FONT>    import org.mozilla.javascript.Function;<a name="line.29"></a>
+<FONT color="green">030</FONT>    import org.mozilla.javascript.JavaScriptException;<a name="line.30"></a>
+<FONT color="green">031</FONT>    import org.mozilla.javascript.NativeJavaPackage;<a name="line.31"></a>
+<FONT color="green">032</FONT>    import org.mozilla.javascript.NativeJavaTopPackage;<a name="line.32"></a>
+<FONT color="green">033</FONT>    import org.mozilla.javascript.Script;<a name="line.33"></a>
+<FONT color="green">034</FONT>    import org.mozilla.javascript.ScriptRuntime;<a name="line.34"></a>
+<FONT color="green">035</FONT>    import org.mozilla.javascript.Scriptable;<a name="line.35"></a>
+<FONT color="green">036</FONT>    import org.mozilla.javascript.ScriptableObject;<a name="line.36"></a>
+<FONT color="green">037</FONT>    import org.mozilla.javascript.UniqueTag;<a name="line.37"></a>
+<FONT color="green">038</FONT>    import org.mozilla.javascript.tools.shell.Global;<a name="line.38"></a>
+<FONT color="green">039</FONT>    <a name="line.39"></a>
+<FONT color="green">040</FONT>    import java.io.File;<a name="line.40"></a>
+<FONT color="green">041</FONT>    import java.io.IOException;<a name="line.41"></a>
+<FONT color="green">042</FONT>    import java.util.ArrayList;<a name="line.42"></a>
+<FONT color="green">043</FONT>    import java.util.Arrays;<a name="line.43"></a>
+<FONT color="green">044</FONT>    import java.util.Iterator;<a name="line.44"></a>
+<FONT color="green">045</FONT>    import java.util.List;<a name="line.45"></a>
+<FONT color="green">046</FONT>    import java.util.Stack;<a name="line.46"></a>
+<FONT color="green">047</FONT>    <a name="line.47"></a>
+<FONT color="green">048</FONT>    /**<a name="line.48"></a>
+<FONT color="green">049</FONT>     * An action for running r.js against a virtual filesystem.<a name="line.49"></a>
+<FONT color="green">050</FONT>     */<a name="line.50"></a>
+<FONT color="green">051</FONT>    public class OptimizeContextAction extends ScriptableObject implements ContextAction {<a name="line.51"></a>
+<FONT color="green">052</FONT>        private final Global global;<a name="line.52"></a>
+<FONT color="green">053</FONT>        private final File profileJs;<a name="line.53"></a>
+<FONT color="green">054</FONT>        private final String source;<a name="line.54"></a>
+<FONT color="green">055</FONT>        private final int lineNo;<a name="line.55"></a>
+<FONT color="green">056</FONT>        private final PseudoFileSystem.Layer[] layers;<a name="line.56"></a>
+<FONT color="green">057</FONT>        private final Log log;<a name="line.57"></a>
+<FONT color="green">058</FONT>    <a name="line.58"></a>
+<FONT color="green">059</FONT>        public OptimizeContextAction(Log log, Global global, File profileJs, String source, int lineNo,<a name="line.59"></a>
+<FONT color="green">060</FONT>                                     PseudoFileSystem.Layer... layers) {<a name="line.60"></a>
+<FONT color="green">061</FONT>            this.log = log;<a name="line.61"></a>
+<FONT color="green">062</FONT>            this.global = global;<a name="line.62"></a>
+<FONT color="green">063</FONT>            this.profileJs = profileJs;<a name="line.63"></a>
+<FONT color="green">064</FONT>            this.source = source;<a name="line.64"></a>
+<FONT color="green">065</FONT>            this.lineNo = lineNo;<a name="line.65"></a>
+<FONT color="green">066</FONT>            this.layers = layers;<a name="line.66"></a>
+<FONT color="green">067</FONT>        }<a name="line.67"></a>
 <FONT color="green">068</FONT>    <a name="line.68"></a>
-<FONT color="green">069</FONT>                if (log.isDebugEnabled()) {<a name="line.69"></a>
-<FONT color="green">070</FONT>                    log.debug("Virtual filesystem exposed to r.js:");<a name="line.70"></a>
-<FONT color="green">071</FONT>                    Stack&lt;Iterator&lt;PseudoFile&gt;&gt; stack = new Stack&lt;Iterator&lt;PseudoFile&gt;&gt;();<a name="line.71"></a>
-<FONT color="green">072</FONT>                    stack.push(Arrays.asList(fileSystem.root().listFiles()).iterator());<a name="line.72"></a>
-<FONT color="green">073</FONT>                    while (!stack.isEmpty()) {<a name="line.73"></a>
-<FONT color="green">074</FONT>                        Iterator&lt;PseudoFile&gt; iterator = stack.pop();<a name="line.74"></a>
-<FONT color="green">075</FONT>                        while (iterator.hasNext()) {<a name="line.75"></a>
-<FONT color="green">076</FONT>                            PseudoFile f = iterator.next();<a name="line.76"></a>
-<FONT color="green">077</FONT>                            if (f.isFile()) {<a name="line.77"></a>
-<FONT color="green">078</FONT>                                log.debug("  " + f.getAbsolutePath() + " [file]");<a name="line.78"></a>
-<FONT color="green">079</FONT>                            } else {<a name="line.79"></a>
-<FONT color="green">080</FONT>                                log.debug("  " + f.getAbsolutePath() + " [dir]");<a name="line.80"></a>
-<FONT color="green">081</FONT>                                stack.push(iterator);<a name="line.81"></a>
-<FONT color="green">082</FONT>                                iterator = Arrays.asList(f.listFiles()).iterator();<a name="line.82"></a>
-<FONT color="green">083</FONT>                            }<a name="line.83"></a>
-<FONT color="green">084</FONT>                        }<a name="line.84"></a>
-<FONT color="green">085</FONT>                    }<a name="line.85"></a>
-<FONT color="green">086</FONT>                }<a name="line.86"></a>
-<FONT color="green">087</FONT>    <a name="line.87"></a>
-<FONT color="green">088</FONT>                global.defineFunctionProperties(new String[]{"print"}, OptimizeContextAction.class,<a name="line.88"></a>
-<FONT color="green">089</FONT>                        ScriptableObject.DONTENUM);<a name="line.89"></a>
-<FONT color="green">090</FONT>    <a name="line.90"></a>
-<FONT color="green">091</FONT>                Script script = context.compileString(source, "r.js", lineNo, null);<a name="line.91"></a>
-<FONT color="green">092</FONT>    <a name="line.92"></a>
-<FONT color="green">093</FONT>                Scriptable argsObj = context.newArray(global,<a name="line.93"></a>
-<FONT color="green">094</FONT>                        new Object[]{"-o", "/build/" + profileJs.getName()});<a name="line.94"></a>
-<FONT color="green">095</FONT>                global.defineProperty("arguments", argsObj, ScriptableObject.DONTENUM);<a name="line.95"></a>
-<FONT color="green">096</FONT>    <a name="line.96"></a>
-<FONT color="green">097</FONT>                Scriptable scope = context.newObject(global);<a name="line.97"></a>
-<FONT color="green">098</FONT>                scope.setPrototype(global);<a name="line.98"></a>
-<FONT color="green">099</FONT>                scope.setParentScope(null);<a name="line.99"></a>
-<FONT color="green">100</FONT>    <a name="line.100"></a>
-<FONT color="green">101</FONT>                NativeJavaTopPackage $packages = (NativeJavaTopPackage) global.get("Packages");<a name="line.101"></a>
-<FONT color="green">102</FONT>                NativeJavaPackage $java = (NativeJavaPackage) $packages.get("java");<a name="line.102"></a>
-<FONT color="green">103</FONT>                NativeJavaPackage $java_io = (NativeJavaPackage) $java.get("io");<a name="line.103"></a>
-<FONT color="green">104</FONT>    <a name="line.104"></a>
-<FONT color="green">105</FONT>                ProxyNativeJavaPackage proxy$java = new ProxyNativeJavaPackage($java);<a name="line.105"></a>
-<FONT color="green">106</FONT>                ProxyNativeJavaPackage proxy$java_io = new ProxyNativeJavaPackage($java_io);<a name="line.106"></a>
-<FONT color="green">107</FONT>                proxy$java_io.put("File", global, get(global, "Packages." + ProxyPseudoFile.class.getName()));<a name="line.107"></a>
-<FONT color="green">108</FONT>                proxy$java_io.put("FileInputStream", global,<a name="line.108"></a>
-<FONT color="green">109</FONT>                        get(global, "Packages." + PseudoFileInputStream.class.getName()));<a name="line.109"></a>
-<FONT color="green">110</FONT>                proxy$java_io.put("FileOutputStream", global,<a name="line.110"></a>
-<FONT color="green">111</FONT>                        get(global, "Packages." + PseudoFileOutputStream.class.getName()));<a name="line.111"></a>
-<FONT color="green">112</FONT>                proxy$java.put("io", global, proxy$java_io);<a name="line.112"></a>
-<FONT color="green">113</FONT>                global.defineProperty("java", proxy$java, ScriptableObject.DONTENUM);<a name="line.113"></a>
-<FONT color="green">114</FONT>    <a name="line.114"></a>
-<FONT color="green">115</FONT>                if (script != null) {<a name="line.115"></a>
-<FONT color="green">116</FONT>                    log.info("Applying r.js profile " + profileJs.getPath());<a name="line.116"></a>
-<FONT color="green">117</FONT>                    return script.exec(context, scope);<a name="line.117"></a>
-<FONT color="green">118</FONT>                }<a name="line.118"></a>
-<FONT color="green">119</FONT>                return null;<a name="line.119"></a>
-<FONT color="green">120</FONT>            } finally {<a name="line.120"></a>
-<FONT color="green">121</FONT>                fileSystem.removeFromContext();<a name="line.121"></a>
-<FONT color="green">122</FONT>                context.putThreadLocal(OptimizeContextAction.class, null);<a name="line.122"></a>
-<FONT color="green">123</FONT>            }<a name="line.123"></a>
-<FONT color="green">124</FONT>        }<a name="line.124"></a>
-<FONT color="green">125</FONT>    <a name="line.125"></a>
-<FONT color="green">126</FONT>        private Object get(Scriptable scope, String name) {<a name="line.126"></a>
-<FONT color="green">127</FONT>            Scriptable cur = scope;<a name="line.127"></a>
-<FONT color="green">128</FONT>            for (String part : StringUtils.split(name, ".")) {<a name="line.128"></a>
-<FONT color="green">129</FONT>                Object next = cur.get(part, scope);<a name="line.129"></a>
-<FONT color="green">130</FONT>                if (next instanceof Scriptable) {<a name="line.130"></a>
-<FONT color="green">131</FONT>                    cur = (Scriptable) next;<a name="line.131"></a>
-<FONT color="green">132</FONT>                } else {<a name="line.132"></a>
-<FONT color="green">133</FONT>                    return null;<a name="line.133"></a>
-<FONT color="green">134</FONT>                }<a name="line.134"></a>
-<FONT color="green">135</FONT>            }<a name="line.135"></a>
-<FONT color="green">136</FONT>            return cur;<a name="line.136"></a>
-<FONT color="green">137</FONT>        }<a name="line.137"></a>
+<FONT color="green">069</FONT>        public Object run(Context context) {<a name="line.69"></a>
+<FONT color="green">070</FONT>            context.setErrorReporter(new MavenLogErrorReporter(log));<a name="line.70"></a>
+<FONT color="green">071</FONT>            PseudoFileSystem fileSystem = new PseudoFileSystem(layers);<a name="line.71"></a>
+<FONT color="green">072</FONT>            context.putThreadLocal(OptimizeContextAction.class, log);<a name="line.72"></a>
+<FONT color="green">073</FONT>            fileSystem.installInContext();<a name="line.73"></a>
+<FONT color="green">074</FONT>            try {<a name="line.74"></a>
+<FONT color="green">075</FONT>    <a name="line.75"></a>
+<FONT color="green">076</FONT>                if (log.isDebugEnabled()) {<a name="line.76"></a>
+<FONT color="green">077</FONT>                    log.debug("Virtual filesystem exposed to r.js:");<a name="line.77"></a>
+<FONT color="green">078</FONT>                    Stack&lt;Iterator&lt;PseudoFile&gt;&gt; stack = new Stack&lt;Iterator&lt;PseudoFile&gt;&gt;();<a name="line.78"></a>
+<FONT color="green">079</FONT>                    stack.push(Arrays.asList(fileSystem.root().listFiles()).iterator());<a name="line.79"></a>
+<FONT color="green">080</FONT>                    while (!stack.isEmpty()) {<a name="line.80"></a>
+<FONT color="green">081</FONT>                        Iterator&lt;PseudoFile&gt; iterator = stack.pop();<a name="line.81"></a>
+<FONT color="green">082</FONT>                        while (iterator.hasNext()) {<a name="line.82"></a>
+<FONT color="green">083</FONT>                            PseudoFile f = iterator.next();<a name="line.83"></a>
+<FONT color="green">084</FONT>                            if (f.isFile()) {<a name="line.84"></a>
+<FONT color="green">085</FONT>                                log.debug("  " + f.getAbsolutePath() + " [file]");<a name="line.85"></a>
+<FONT color="green">086</FONT>                            } else {<a name="line.86"></a>
+<FONT color="green">087</FONT>                                log.debug("  " + f.getAbsolutePath() + " [dir]");<a name="line.87"></a>
+<FONT color="green">088</FONT>                                stack.push(iterator);<a name="line.88"></a>
+<FONT color="green">089</FONT>                                iterator = Arrays.asList(f.listFiles()).iterator();<a name="line.89"></a>
+<FONT color="green">090</FONT>                            }<a name="line.90"></a>
+<FONT color="green">091</FONT>                        }<a name="line.91"></a>
+<FONT color="green">092</FONT>                    }<a name="line.92"></a>
+<FONT color="green">093</FONT>                }<a name="line.93"></a>
+<FONT color="green">094</FONT>    <a name="line.94"></a>
+<FONT color="green">095</FONT>                List&lt;String&gt; argsList = new ArrayList&lt;String&gt;();<a name="line.95"></a>
+<FONT color="green">096</FONT>                argsList.add("-o");<a name="line.96"></a>
+<FONT color="green">097</FONT>                argsList.add("/build/" + profileJs.getName());<a name="line.97"></a>
+<FONT color="green">098</FONT>                String appDir = null;<a name="line.98"></a>
+<FONT color="green">099</FONT>                String baseUrl = "./";<a name="line.99"></a>
+<FONT color="green">100</FONT>                String dir = null;<a name="line.100"></a>
+<FONT color="green">101</FONT>                try {<a name="line.101"></a>
+<FONT color="green">102</FONT>                    String profile = FileUtils.fileRead(profileJs, "UTF-8");<a name="line.102"></a>
+<FONT color="green">103</FONT>                    Scriptable scope = context.newObject(global);<a name="line.103"></a>
+<FONT color="green">104</FONT>                    scope.setPrototype(global);<a name="line.104"></a>
+<FONT color="green">105</FONT>                    scope.setParentScope(null);<a name="line.105"></a>
+<FONT color="green">106</FONT>                    Object parsedProfile = context.evaluateString(scope, profile, profileJs.getName(), 0, null);<a name="line.106"></a>
+<FONT color="green">107</FONT>                    if (parsedProfile instanceof Scriptable) {<a name="line.107"></a>
+<FONT color="green">108</FONT>                        final Scriptable scriptable = (Scriptable) parsedProfile;<a name="line.108"></a>
+<FONT color="green">109</FONT>                        appDir = getStringWithDefault(scriptable, "appDir", null);<a name="line.109"></a>
+<FONT color="green">110</FONT>                        baseUrl = getStringWithDefault(scriptable, "baseUrl", "./");<a name="line.110"></a>
+<FONT color="green">111</FONT>                        dir = getStringWithDefault(scriptable, "dir", null);<a name="line.111"></a>
+<FONT color="green">112</FONT>                    }<a name="line.112"></a>
+<FONT color="green">113</FONT>                } catch (IOException e) {<a name="line.113"></a>
+<FONT color="green">114</FONT>                    log.debug("Cannot infer profile fixups", e);<a name="line.114"></a>
+<FONT color="green">115</FONT>                } catch (JavaScriptException e) {<a name="line.115"></a>
+<FONT color="green">116</FONT>                    log.warn("JavaScript exception while parsing " + profileJs.getAbsolutePath() + ": " + e.details());<a name="line.116"></a>
+<FONT color="green">117</FONT>                } catch (Throwable e) {<a name="line.117"></a>
+<FONT color="green">118</FONT>                    log.warn("Cannot infer if profile needs appDir and dir remapping to virtual directory structure", e);<a name="line.118"></a>
+<FONT color="green">119</FONT>                }<a name="line.119"></a>
+<FONT color="green">120</FONT>                if (appDir == null) {<a name="line.120"></a>
+<FONT color="green">121</FONT>                    argsList.add("appDir=/virtual/");<a name="line.121"></a>
+<FONT color="green">122</FONT>                    argsList.add("baseUrl=" + baseUrl);<a name="line.122"></a>
+<FONT color="green">123</FONT>                } else if (!appDir.startsWith("/virtual/") &amp;&amp; !appDir.equals("/virtual")) {<a name="line.123"></a>
+<FONT color="green">124</FONT>                    argsList.add("appDir=/virtual/" + StringUtils.removeEnd(StringUtils.removeStart(appDir, "/"),"/")+"/");<a name="line.124"></a>
+<FONT color="green">125</FONT>                    argsList.add("baseUrl=" + baseUrl);<a name="line.125"></a>
+<FONT color="green">126</FONT>                }<a name="line.126"></a>
+<FONT color="green">127</FONT>                if (dir == null) {<a name="line.127"></a>
+<FONT color="green">128</FONT>                    argsList.add("dir=/target/");<a name="line.128"></a>
+<FONT color="green">129</FONT>                } else if (!dir.startsWith("/target/") &amp;&amp; !dir.equals("/target")) {<a name="line.129"></a>
+<FONT color="green">130</FONT>                    argsList.add("dir=/target/" + StringUtils.removeEnd(StringUtils.removeStart(dir, "/"),"/")+"/");<a name="line.130"></a>
+<FONT color="green">131</FONT>                }<a name="line.131"></a>
+<FONT color="green">132</FONT>    <a name="line.132"></a>
+<FONT color="green">133</FONT>                global.defineFunctionProperties(new String[]{"print", "quit"}, OptimizeContextAction.class,<a name="line.133"></a>
+<FONT color="green">134</FONT>                        ScriptableObject.DONTENUM);<a name="line.134"></a>
+<FONT color="green">135</FONT>    <a name="line.135"></a>
+<FONT color="green">136</FONT>                Script script = context.compileString(source, "r.js", lineNo, null);<a name="line.136"></a>
+<FONT color="green">137</FONT>                script.getClass();<a name="line.137"></a>
 <FONT color="green">138</FONT>    <a name="line.138"></a>
-<FONT color="green">139</FONT>        @Override<a name="line.139"></a>
-<FONT color="green">140</FONT>        public String getClassName() {<a name="line.140"></a>
-<FONT color="green">141</FONT>            return "global";<a name="line.141"></a>
-<FONT color="green">142</FONT>        }<a name="line.142"></a>
-<FONT color="green">143</FONT>    <a name="line.143"></a>
-<FONT color="green">144</FONT>        /**<a name="line.144"></a>
-<FONT color="green">145</FONT>         * Print the string values of its arguments.<a name="line.145"></a>
-<FONT color="green">146</FONT>         * &lt;p/&gt;<a name="line.146"></a>
-<FONT color="green">147</FONT>         * This method is defined as a JavaScript function. Note that its arguments<a name="line.147"></a>
-<FONT color="green">148</FONT>         * are of the "varargs" form, which allows it to handle an arbitrary number<a name="line.148"></a>
-<FONT color="green">149</FONT>         * of arguments supplied to the JavaScript function.<a name="line.149"></a>
-<FONT color="green">150</FONT>         */<a name="line.150"></a>
-<FONT color="green">151</FONT>        public static void print(Context cx, Scriptable thisObj, Object[] args, Function funObj) {<a name="line.151"></a>
-<FONT color="green">152</FONT>            StringBuilder builder = new StringBuilder();<a name="line.152"></a>
-<FONT color="green">153</FONT>            for (int i = 0; i &lt; args.length; i++) {<a name="line.153"></a>
-<FONT color="green">154</FONT>                if (i &gt; 0) {<a name="line.154"></a>
-<FONT color="green">155</FONT>                    builder.append(" ");<a name="line.155"></a>
-<FONT color="green">156</FONT>                }<a name="line.156"></a>
-<FONT color="green">157</FONT>    <a name="line.157"></a>
-<FONT color="green">158</FONT>                // Convert the arbitrary JavaScript value into a string form.<a name="line.158"></a>
-<FONT color="green">159</FONT>                String s = Context.toString(args[i]);<a name="line.159"></a>
-<FONT color="green">160</FONT>    <a name="line.160"></a>
-<FONT color="green">161</FONT>                builder.append(s);<a name="line.161"></a>
-<FONT color="green">162</FONT>            }<a name="line.162"></a>
-<FONT color="green">163</FONT>            Log log = (Log) cx.getThreadLocal(OptimizeContextAction.class);<a name="line.163"></a>
-<FONT color="green">164</FONT>            if (log != null) {<a name="line.164"></a>
-<FONT color="green">165</FONT>                for (String line : builder.toString().split("(\\r\\n?)|(\\n\\r?)")) {<a name="line.165"></a>
-<FONT color="green">166</FONT>                    log.info(line);<a name="line.166"></a>
-<FONT color="green">167</FONT>                }<a name="line.167"></a>
-<FONT color="green">168</FONT>            }<a name="line.168"></a>
-<FONT color="green">169</FONT>        }<a name="line.169"></a>
-<FONT color="green">170</FONT>    <a name="line.170"></a>
-<FONT color="green">171</FONT>    }<a name="line.171"></a>
+<FONT color="green">139</FONT>                Scriptable argsObj = context.newArray(global, argsList.toArray());<a name="line.139"></a>
+<FONT color="green">140</FONT>                global.defineProperty("arguments", argsObj, ScriptableObject.DONTENUM);<a name="line.140"></a>
+<FONT color="green">141</FONT>    <a name="line.141"></a>
+<FONT color="green">142</FONT>                Scriptable scope = context.newObject(global);<a name="line.142"></a>
+<FONT color="green">143</FONT>                scope.setPrototype(global);<a name="line.143"></a>
+<FONT color="green">144</FONT>                scope.setParentScope(null);<a name="line.144"></a>
+<FONT color="green">145</FONT>    <a name="line.145"></a>
+<FONT color="green">146</FONT>                NativeJavaTopPackage $packages = (NativeJavaTopPackage) global.get("Packages");<a name="line.146"></a>
+<FONT color="green">147</FONT>                NativeJavaPackage $java = (NativeJavaPackage) $packages.get("java");<a name="line.147"></a>
+<FONT color="green">148</FONT>                NativeJavaPackage $java_io = (NativeJavaPackage) $java.get("io");<a name="line.148"></a>
+<FONT color="green">149</FONT>    <a name="line.149"></a>
+<FONT color="green">150</FONT>                ProxyNativeJavaPackage proxy$java = new ProxyNativeJavaPackage($java);<a name="line.150"></a>
+<FONT color="green">151</FONT>                ProxyNativeJavaPackage proxy$java_io = new ProxyNativeJavaPackage($java_io);<a name="line.151"></a>
+<FONT color="green">152</FONT>                proxy$java_io.put("File", global, get(global, "Packages." + ProxyPseudoFile.class.getName()));<a name="line.152"></a>
+<FONT color="green">153</FONT>                proxy$java_io.put("FileInputStream", global,<a name="line.153"></a>
+<FONT color="green">154</FONT>                        get(global, "Packages." + PseudoFileInputStream.class.getName()));<a name="line.154"></a>
+<FONT color="green">155</FONT>                proxy$java_io.put("FileOutputStream", global,<a name="line.155"></a>
+<FONT color="green">156</FONT>                        get(global, "Packages." + PseudoFileOutputStream.class.getName()));<a name="line.156"></a>
+<FONT color="green">157</FONT>                proxy$java.put("io", global, proxy$java_io);<a name="line.157"></a>
+<FONT color="green">158</FONT>                global.defineProperty("java", proxy$java, ScriptableObject.DONTENUM);<a name="line.158"></a>
+<FONT color="green">159</FONT>    <a name="line.159"></a>
+<FONT color="green">160</FONT>                log.info("Applying r.js profile " + profileJs.getPath());<a name="line.160"></a>
+<FONT color="green">161</FONT>                log.debug("Executing r.js with arguments: " + StringUtils.join(argsList, " "));<a name="line.161"></a>
+<FONT color="green">162</FONT>                context.putThreadLocal(ExitCodeHolder.class, new ExitCodeHolder(0));<a name="line.162"></a>
+<FONT color="green">163</FONT>                script.exec(context, scope);<a name="line.163"></a>
+<FONT color="green">164</FONT>                ExitCodeHolder result = (ExitCodeHolder) context.getThreadLocal(ExitCodeHolder.class);<a name="line.164"></a>
+<FONT color="green">165</FONT>                context.putThreadLocal(ExitCodeHolder.class, null);<a name="line.165"></a>
+<FONT color="green">166</FONT>                return result.getExitCode();<a name="line.166"></a>
+<FONT color="green">167</FONT>            } finally {<a name="line.167"></a>
+<FONT color="green">168</FONT>                fileSystem.removeFromContext();<a name="line.168"></a>
+<FONT color="green">169</FONT>                context.putThreadLocal(OptimizeContextAction.class, null);<a name="line.169"></a>
+<FONT color="green">170</FONT>            }<a name="line.170"></a>
+<FONT color="green">171</FONT>        }<a name="line.171"></a>
+<FONT color="green">172</FONT>    <a name="line.172"></a>
+<FONT color="green">173</FONT>        private String getStringWithDefault(Scriptable scriptable, String name, String defaultValue) {<a name="line.173"></a>
+<FONT color="green">174</FONT>            final Object object = scriptable.get(name, scriptable);<a name="line.174"></a>
+<FONT color="green">175</FONT>            if (object instanceof String) {<a name="line.175"></a>
+<FONT color="green">176</FONT>                return (String) object;<a name="line.176"></a>
+<FONT color="green">177</FONT>            }<a name="line.177"></a>
+<FONT color="green">178</FONT>            if (object instanceof UniqueTag) {<a name="line.178"></a>
+<FONT color="green">179</FONT>                if (object == UniqueTag.NULL_VALUE) {<a name="line.179"></a>
+<FONT color="green">180</FONT>                    return null;<a name="line.180"></a>
+<FONT color="green">181</FONT>                }<a name="line.181"></a>
+<FONT color="green">182</FONT>                return defaultValue;<a name="line.182"></a>
+<FONT color="green">183</FONT>            } else {<a name="line.183"></a>
+<FONT color="green">184</FONT>                return object.toString();<a name="line.184"></a>
+<FONT color="green">185</FONT>            }<a name="line.185"></a>
+<FONT color="green">186</FONT>        }<a name="line.186"></a>
+<FONT color="green">187</FONT>    <a name="line.187"></a>
+<FONT color="green">188</FONT>        private Object get(Scriptable scope, String name) {<a name="line.188"></a>
+<FONT color="green">189</FONT>            Scriptable cur = scope;<a name="line.189"></a>
+<FONT color="green">190</FONT>            for (String part : StringUtils.split(name, ".")) {<a name="line.190"></a>
+<FONT color="green">191</FONT>                Object next = cur.get(part, scope);<a name="line.191"></a>
+<FONT color="green">192</FONT>                if (next instanceof Scriptable) {<a name="line.192"></a>
+<FONT color="green">193</FONT>                    cur = (Scriptable) next;<a name="line.193"></a>
+<FONT color="green">194</FONT>                } else {<a name="line.194"></a>
+<FONT color="green">195</FONT>                    return null;<a name="line.195"></a>
+<FONT color="green">196</FONT>                }<a name="line.196"></a>
+<FONT color="green">197</FONT>            }<a name="line.197"></a>
+<FONT color="green">198</FONT>            return cur;<a name="line.198"></a>
+<FONT color="green">199</FONT>        }<a name="line.199"></a>
+<FONT color="green">200</FONT>    <a name="line.200"></a>
+<FONT color="green">201</FONT>        @Override<a name="line.201"></a>
+<FONT color="green">202</FONT>        public String getClassName() {<a name="line.202"></a>
+<FONT color="green">203</FONT>            return "global";<a name="line.203"></a>
+<FONT color="green">204</FONT>        }<a name="line.204"></a>
+<FONT color="green">205</FONT>    <a name="line.205"></a>
+<FONT color="green">206</FONT>        /**<a name="line.206"></a>
+<FONT color="green">207</FONT>         * Print the string values of its arguments.<a name="line.207"></a>
+<FONT color="green">208</FONT>         * &lt;p/&gt;<a name="line.208"></a>
+<FONT color="green">209</FONT>         * This method is defined as a JavaScript function. Note that its arguments<a name="line.209"></a>
+<FONT color="green">210</FONT>         * are of the "varargs" form, which allows it to handle an arbitrary number<a name="line.210"></a>
+<FONT color="green">211</FONT>         * of arguments supplied to the JavaScript function.<a name="line.211"></a>
+<FONT color="green">212</FONT>         */<a name="line.212"></a>
+<FONT color="green">213</FONT>        public static void print(Context cx, Scriptable thisObj, Object[] args, Function funObj) {<a name="line.213"></a>
+<FONT color="green">214</FONT>            StringBuilder builder = new StringBuilder();<a name="line.214"></a>
+<FONT color="green">215</FONT>            for (int i = 0; i &lt; args.length; i++) {<a name="line.215"></a>
+<FONT color="green">216</FONT>                if (i &gt; 0) {<a name="line.216"></a>
+<FONT color="green">217</FONT>                    builder.append(" ");<a name="line.217"></a>
+<FONT color="green">218</FONT>                }<a name="line.218"></a>
+<FONT color="green">219</FONT>    <a name="line.219"></a>
+<FONT color="green">220</FONT>                // Convert the arbitrary JavaScript value into a string form.<a name="line.220"></a>
+<FONT color="green">221</FONT>                String s = Context.toString(args[i]);<a name="line.221"></a>
+<FONT color="green">222</FONT>    <a name="line.222"></a>
+<FONT color="green">223</FONT>                builder.append(s);<a name="line.223"></a>
+<FONT color="green">224</FONT>            }<a name="line.224"></a>
+<FONT color="green">225</FONT>            Log log = (Log) cx.getThreadLocal(OptimizeContextAction.class);<a name="line.225"></a>
+<FONT color="green">226</FONT>            if (log != null) {<a name="line.226"></a>
+<FONT color="green">227</FONT>                for (String line : builder.toString().split("(\\r\\n?)|(\\n\\r?)")) {<a name="line.227"></a>
+<FONT color="green">228</FONT>                    log.info(line);<a name="line.228"></a>
+<FONT color="green">229</FONT>                }<a name="line.229"></a>
+<FONT color="green">230</FONT>            }<a name="line.230"></a>
+<FONT color="green">231</FONT>        }<a name="line.231"></a>
+<FONT color="green">232</FONT>    <a name="line.232"></a>
+<FONT color="green">233</FONT>        /**<a name="line.233"></a>
+<FONT color="green">234</FONT>         * Print the string values of its arguments.<a name="line.234"></a>
+<FONT color="green">235</FONT>         * &lt;p/&gt;<a name="line.235"></a>
+<FONT color="green">236</FONT>         * This method is defined as a JavaScript function. Note that its arguments<a name="line.236"></a>
+<FONT color="green">237</FONT>         * are of the "varargs" form, which allows it to handle an arbitrary number<a name="line.237"></a>
+<FONT color="green">238</FONT>         * of arguments supplied to the JavaScript function.<a name="line.238"></a>
+<FONT color="green">239</FONT>         */<a name="line.239"></a>
+<FONT color="green">240</FONT>        public static void quit(Context cx, Scriptable thisObj, Object[] args, Function funObj) {<a name="line.240"></a>
+<FONT color="green">241</FONT>            final int exitCode = args.length == 0 ? 0 : ScriptRuntime.toInt32(args[0]);<a name="line.241"></a>
+<FONT color="green">242</FONT>            final Log log = (Log) cx.getThreadLocal(OptimizeContextAction.class);<a name="line.242"></a>
+<FONT color="green">243</FONT>            cx.putThreadLocal(ExitCodeHolder.class, new ExitCodeHolder(exitCode));<a name="line.243"></a>
+<FONT color="green">244</FONT>            if (exitCode &gt; 0) {<a name="line.244"></a>
+<FONT color="green">245</FONT>                if (log != null) {<a name="line.245"></a>
+<FONT color="green">246</FONT>                    log.error("Script exit code = " + exitCode);<a name="line.246"></a>
+<FONT color="green">247</FONT>                }<a name="line.247"></a>
+<FONT color="green">248</FONT>            } else {<a name="line.248"></a>
+<FONT color="green">249</FONT>                if (log != null) {<a name="line.249"></a>
+<FONT color="green">250</FONT>                    log.debug("Script exit code = " + exitCode);<a name="line.250"></a>
+<FONT color="green">251</FONT>                }<a name="line.251"></a>
+<FONT color="green">252</FONT>            }<a name="line.252"></a>
+<FONT color="green">253</FONT>    <a name="line.253"></a>
+<FONT color="green">254</FONT>        }<a name="line.254"></a>
+<FONT color="green">255</FONT>    <a name="line.255"></a>
+<FONT color="green">256</FONT>        private static class ExitCodeHolder {<a name="line.256"></a>
+<FONT color="green">257</FONT>            private final int exitCode;<a name="line.257"></a>
+<FONT color="green">258</FONT>    <a name="line.258"></a>
+<FONT color="green">259</FONT>            private ExitCodeHolder(int exitCode) {<a name="line.259"></a>
+<FONT color="green">260</FONT>                this.exitCode = exitCode;<a name="line.260"></a>
+<FONT color="green">261</FONT>            }<a name="line.261"></a>
+<FONT color="green">262</FONT>    <a name="line.262"></a>
+<FONT color="green">263</FONT>            public int getExitCode() {<a name="line.263"></a>
+<FONT color="green">264</FONT>                return exitCode;<a name="line.264"></a>
+<FONT color="green">265</FONT>            }<a name="line.265"></a>
+<FONT color="green">266</FONT>    <a name="line.266"></a>
+<FONT color="green">267</FONT>        }<a name="line.267"></a>
+<FONT color="green">268</FONT>    <a name="line.268"></a>
+<FONT color="green">269</FONT>    }<a name="line.269"></a>
 
 
 
