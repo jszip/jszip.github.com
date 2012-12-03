@@ -198,7 +198,7 @@
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
-   limitations under the License. --><h1>Redistributions</h1><p><a class="externalLink" href="http://jszip.org/">jszip.org</a> hosts some redistributions of well known JavaScript libraries packaged as <tt>jszip</tt> modules to enable easier usage.</p><p>All redistributions are published under the <tt>groupId</tt> of <tt>org.jszip.redist</tt>.</p><p>To use a redistribution in your project you just add the required dependency, e.g.</p>
+   limitations under the License. --><h1>Repackaged Modules</h1><p><a class="externalLink" href="http://jszip.org/">jszip.org</a> hosts some redistributions of well known JavaScript libraries packaged as <tt>jszip</tt> modules to enable easier usage.</p><p>All redistributions are published under the <tt>groupId</tt> of <tt>org.jszip.redist</tt>.</p><p>For a complete list of all redistributed modules just <a class="externalLink" href="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.jszip.redist%22">search Maven Central</a> for artifacts with the groupId of <tt>org.jszip.redist</tt>.</p><p>To use a redistribution in your project you just add the required dependency, e.g.</p>
 <div class="source"><pre class="prettyprint linenums">&lt;dependency&gt;
   &lt;groupId&gt;org.jszip.redist&lt;/groupId&gt;
   &lt;artifactId&gt;jquery&lt;/artifactId&gt;
@@ -207,8 +207,8 @@
 &lt;/dependency&gt;
 </pre></div><p>Redistributions follow a few basic rules:</p>
 <ul>
-  <li><p>No minified versions - with the jszip-maven-plugin it is easy to generate  minified versions of the dependencies that you include in your project.  Minifying an already minified library takes just as long as minifying the  debug version, and you will want to minify your final code. Additionally,  by only including the debug version you get to debug all the code.</p></li>
-  <li><p>No namespacing of directories. The namespacing of module files is the  job of the <tt>&lt;mappings&gt;</tt> directive to the jszip-maven-plugin, so for example  to put <tt>jquery.js</tt> into its own directory we would just configure  the jszip-maven-plugin like so:</p>
+  <li><p>No minified versions - with the <a class="externalLink" href="http://jszip.org/jszip-maven-plugin/">jszip-maven-plugin</a> it is easy to generate  minified versions of the dependencies that you include in your project.  Minifying an already minified library takes just as long as minifying the  debug version, and you will want to minify your final code. Additionally,  by only including the debug version you get to debug all the code.</p></li>
+  <li><p>No namespacing of directories. The namespacing of module files is the  job of the <tt>&lt;mappings&gt;</tt> directive to the <a class="externalLink" href="http://jszip.org/jszip-maven-plugin/">jszip-maven-plugin</a>, so for example  to put <tt>jquery.js</tt> into its own directory we would just configure  the jszip-maven-plugin like so:</p>
   <div class="source"><pre class="prettyprint linenums">&lt;plugin&gt;
   &lt;groupId&gt;org.jszip.maven&lt;groupId&gt;
   &lt;artifactId&gt;jszip-maven-plugin&lt;/artifactId&gt;
