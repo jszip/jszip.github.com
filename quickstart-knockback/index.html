@@ -225,35 +225,140 @@
    distributed under the License is distributed on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
    See the License for the specific language governing permissions and
-   limitations under the License. --><h1>Repackaged Modules</h1><p><a class="externalLink" href="http://jszip.org/">jszip.org</a> hosts some redistributions of well known JavaScript libraries packaged as <tt>jszip</tt> modules to enable easier usage.</p><p>All redistributions are published under the <tt>groupId</tt> of <tt>org.jszip.redist</tt>.</p><p>For a complete list of all redistributed modules just <a class="externalLink" href="http://search.maven.org/#search%7Cga%7C1%7Cg%3A%22org.jszip.redist%22">search Maven Central</a> for artifacts with the groupId of <tt>org.jszip.redist</tt>.</p><p>To use a redistribution in your project you just add the required dependency, e.g.</p>
+   limitations under the License. --><h1>Quickstart Knockback Example</h1><p>If you have completed the very basic <a class="externalLink" href="http://jszip.org/quickstart/">Quickstart</a> you probably are looking for an example that is a little bit more real. </p><p>This next example stitches together an application using the following technologies:</p>
+<ul>
+  <li><a class="externalLink" href="http://requirejs.org">RequireJS</a> for AMD style module loading</li>
+  <li><a class="externalLink" href="http://backbonejs.org">Backbone</a> for RESTful server communication</li>
+  <li><a class="externalLink" href="http://knockoutjs.com">Knockout</a> for easy binding between models and the HTML view</li>
+  <li><a class="externalLink" href="http://kmalakoff.github.com/knockback/">Knockback</a> to stitch Backbone and Knockout together</li>
+  <li><a class="externalLink" href="http://twitter.github.com/hogan.js/">Hogan</a> to render the initial page content</li>
+</ul><p>Now you should be warned, this is a somewhat trivial example, but it should give some hints as to how you can leverage the power of the JSZip Maven Plugin toolchain.</p><p>This example was inspired by <a class="externalLink" href="http://stackoverflow.com/questions/12305655/the-simplest-example-of-knockback-js-working-with-a-restful-webservice-such-as-s">Scott Idlers Stack Overflow Answer</a>.</p><div class="section"><h2>Checkout the source code and fire up the application<a name="Checkout_the_source_code_and_fire_up_the_application"></a></h2><p>The source code from this example is available on <a class="externalLink" href="https://github.com/jszip/quickstart-knockback">Github</a>, so check it out to get started</p>
+<div class="source"><pre class="prettyprint linenums">$ git clone git://github.com/jszip/jszip-quickstart-knockback.git
+$ cd jszip-quickstart-knockback
+$ mvn compile jszip:run
+</pre></div><p>Alternatively, if you dont have GIT installed (or you might not have a good GIT client if you are running on Windows), you can download a ZIP of the project from the Github page:</p>
+<div class="source"><pre class="prettyprint linenums">$ curl -o jszip-quickstart-knockback.zip https://github.com/jszip/jszip-quickstart-knockback/archive/master.zip
+$ unzip jszip-quickstart-knockback.zip
+$ cd jszip-quickstart-knockback
+$ mvn compile jszip:run
+</pre></div><p>Point your favourite browser at <a class="externalLink" href="http://localhost:8080/">http://localhost:8080/</a> and you should see the application fire up.</p></div><div class="section"><h2>Interesting features<a name="Interesting_features"></a></h2><div class="section"><h3>The webapp module has been stripped almost bare<a name="The_webapp_module_has_been_stripped_almost_bare"></a></h3><p>Have a look at <tt>webapp/src/main/webapp/index.html</tt></p>
+<div class="source"><pre class="prettyprint linenums">&lt;!DOCTYPE html&gt;
+&lt;html xmlns=&quot;http://www.w3.org/1999/xhtml&quot;&gt;
+  &lt;head&gt;
+    &lt;title&gt;Quickstart Knockback&lt;/title&gt;
+    &lt;script src=&quot;json2.js&quot; type=&quot;text/javascript&quot; &gt;&lt;/script&gt;
+    &lt;script src=&quot;require.js&quot; type=&quot;text/javascript&quot; data-main=&quot;scripts/main&quot;&gt;&lt;/script&gt;
+  &lt;/head&gt;
+&lt;body&gt;
+&lt;/body&gt;
+&lt;/html&gt;
+</pre></div><p>What we are doing here is as follows:</p>
+<ol style="list-style-type: decimal">
+  <li>We load the JSON polyfill</li>
+  <li>We load the RequireJS AMD loader</li>
+  <li>The RequireJS AMD loader reads the <tt>data-main</tt> attribute and loads the <tt>scripts/main</tt> module</li>
+</ol><p>If we take a look at the <tt>scripts/main.js</tt> file we can see how the page content gets rendered from the Hogan template <tt>scripts/template.html</tt></p><p>First we configure RequireJS with the details of the paths to the different modules, and also provide the AMD shim for Backbone and Underscore:</p>
+<div class="source"><pre class="prettyprint linenums">require.config({
+    paths:{
+        &quot;backbone&quot;:&quot;/backbone&quot;,
+        &quot;jquery&quot;:&quot;/jquery&quot;,
+        &quot;underscore&quot;:&quot;/underscore&quot;,
+        &quot;knockout&quot;:&quot;/knockout&quot;,
+        &quot;knockback&quot;:&quot;/knockback&quot;,
+        &quot;text&quot;:&quot;/text&quot;,
+        &quot;hogan&quot;:&quot;/hogan&quot;,
+        &quot;domReady&quot;:&quot;/domReady&quot;
+    },
+    shim:{
+        &quot;underscore&quot;:{
+            exports:&quot;_&quot;
+        },
+        &quot;backbone&quot;:{
+            'deps':['underscore', 'jquery'],
+            exports:&quot;Backbone&quot;
+        }
+    }
+});
+</pre></div><p>Then we fire up the application</p>
+<div class="source"><pre class="prettyprint linenums">require([&quot;backbone&quot;, &quot;jquery&quot;, &quot;underscore&quot;, &quot;knockout&quot;, &quot;knockback&quot;, &quot;domReady&quot;, &quot;hogan&quot;, &quot;text!template.html&quot;],
+        function (Backbone, $, _, ko, kb, domready, Hogan, template) {
+</pre></div><p>We define the Model and ViewModel classes</p>
+<div class="source"><pre class="prettyprint linenums">            //model
+            var PersonModel = Backbone.Model.extend({ urlRoot:'/api/persons' });
+
+            //viewmodel
+            var PersonViewModel = function (person) {
+
+                this.firstName = kb.observable(person, 'firstName');
+                this.lastName = kb.observable(person, 'lastName');
+                this.fullName = ko.computed((function () {
+                    return &quot;&quot; + (this.firstName()) + &quot; &quot; + (this.lastName());
+                }), this);
+            };
+
+            //model
+            var PersonsModel = Backbone.Collection.extend({ model:PersonModel, url:'/api/persons' });
+
+            //viewmodel
+            var PersonsViewModel = function (persons) {
+                this.persons = kb.collectionObservable(persons)
+            };
+</pre></div><p>We compile the template which has been loaded for us by RequireJSs text plugin</p>
+<div class="source"><pre class="prettyprint linenums">            var compiledTemplate = Hogan.compile(template);
+            var templateContext = { appName:&quot;QuickStart Knockback&quot;};
+            var templatePartials = {};
+</pre></div><p>When the DOM is ready</p>
+<div class="source"><pre class="prettyprint linenums">            domready(function () {
+</pre></div><p>Inject the rendered template into the DOM</p>
+<div class="source"><pre class="prettyprint linenums">                $('body').append(compiledTemplate.render(templateContext, templatePartials));
+</pre></div><p>Finally load each of the models, and when they are loaded, bind them to the DOM</p>
+<div class="source"><pre class="prettyprint linenums">                var model = new PersonModel({ id:1 });
+                var personViewModel = new PersonViewModel(model);
+                model.fetch().done(function () {
+                    //binding
+                    ko.applyBindings(personViewModel, $('#kb_observable')[0]);
+                });
+
+
+                var personsModel = new PersonsModel();
+                var personsViewModel = new PersonsViewModel(personsModel);
+                personsModel.fetch().done(function () {
+                    //binding
+                    ko.applyBindings(personsViewModel, $('#kb_collection_observable')[0]);
+                });
+            });
+
+        });
+</pre></div></div><div class="section"><h3>Live development<a name="Live_development"></a></h3><p>Live development is as before, but now that we are using dependencies from outside the reactor we can change those dependency versions and have them downloaded and swapped in. For instance the example is pulling in the transitive dependency <tt>org.jszip.redist:underscore:1.3.3</tt> as that is the minimum required version. If you want you can add the following dependency to <tt>client/pom.xml</tt></p>
 <div class="source"><pre class="prettyprint linenums">&lt;dependency&gt;
   &lt;groupId&gt;org.jszip.redist&lt;/groupId&gt;
-  &lt;artifactId&gt;jquery&lt;/artifactId&gt;
-  &lt;version&gt;1.8.1&lt;/version&gt;
+  &lt;artifactId&gt;underscore&lt;/artifactId&gt;
+  &lt;version&gt;1.4.2&lt;/version&gt;
   &lt;type&gt;jszip&lt;/type&gt;
 &lt;/dependency&gt;
-</pre></div><p>Redistributions follow a few basic rules:</p>
-<ul>
-  <li><p>No minified versions - with the <a class="externalLink" href="http://jszip.org/jszip-maven-plugin/">jszip-maven-plugin</a> it is easy to generate  minified versions of the dependencies that you include in your project.  Minifying an already minified library takes just as long as minifying the  debug version, and you will want to minify your final code. Additionally,  by only including the debug version you get to debug all the code.</p></li>
-  <li><p>No namespacing of directories. The namespacing of module files is the  job of the <tt>&lt;mappings&gt;</tt> directive to the <a class="externalLink" href="http://jszip.org/jszip-maven-plugin/">jszip-maven-plugin</a>, so for example  to put <tt>jquery.js</tt> into its own directory we would just configure  the jszip-maven-plugin like so:</p>
-  <div class="source"><pre class="prettyprint linenums">&lt;plugin&gt;
-  &lt;groupId&gt;org.jszip.maven&lt;groupId&gt;
-  &lt;artifactId&gt;jszip-maven-plugin&lt;/artifactId&gt;
-  ...
-  &lt;configuration&gt;
-    ...
-    &lt;mappings&gt;
-      &lt;mapping&gt;
-        &lt;select&gt;*:jquery&lt;/select&gt;
-        &lt;path&gt;lib/jquery&lt;/path&gt;
-      &lt;/mapping&gt;
-    &lt;/mappings&gt;
-    ...
-  &lt;/configuration&gt;
-  ...
-&lt;/plugin&gt;
-</pre></div></li>
-</ul>
+</pre></div><p>Then you will see something like this on the command line where <tt>mvn compile jszip:run</tt> is active after you save the changes to the pom.xml</p>
+<div class="source"><pre class="prettyprint linenums">[INFO] Context started. Will restart if changes to poms detected.
+[INFO] Change in poms detected, re-parsing to evaluate impact...
+Downloading: http://repo1.maven.org/maven2/org/jszip/redist/underscore/1.4.2/underscore-1.4.2.pom
+Downloaded: http://repo1.maven.org/maven2/org/jszip/redist/underscore/1.4.2/underscore-1.4.2.pom (4 KB at 1.4 KB/sec)
+Downloading: http://repo1.maven.org/maven2/org/jszip/redist/underscore/1.4.2/underscore-1.4.2.zip
+Downloaded: http://repo1.maven.org/maven2/org/jszip/redist/underscore/1.4.2/underscore-1.4.2.zip (14 KB at 30.6 KB/sec)
+[INFO] Dependency tree of localhost:quickstart-client:jszip:1.0-SNAPSHOT has been modified
+[INFO] Effective overlays of localhost:quickstart-webapp:war:1.0-SNAPSHOT have changed.
+[INFO] Overlay modules of localhost:quickstart-webapp:war:1.0-SNAPSHOT have changed.
+[INFO] Restarting context to take account of changes...
+...
+...
+...
+[INFO] Context restarted.
+</pre></div><p>And now if you reload your browser and in the browsers JavaScript console you type:</p>
+<div class="source"><pre class="prettyprint linenums">require(&quot;underscore&quot;).VERSION
+</pre></div><p>You should see</p>
+<div class="source"><pre class="prettyprint linenums">1.4.2
+</pre></div><p>Remove the dependency and reload the browser window and your JavaScript console should now give</p>
+<div class="source"><pre class="prettyprint linenums">&gt; require(&quot;underscore&quot;).VERSION
+1.3.3
+</pre></div></div></div>
                   </div>
           </div>
 
