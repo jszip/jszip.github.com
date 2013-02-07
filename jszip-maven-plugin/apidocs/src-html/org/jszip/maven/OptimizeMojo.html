@@ -1,386 +1,222 @@
-<HTML>
-<BODY BGCOLOR="white">
-<PRE>
-<FONT color="green">001</FONT>    /*<a name="line.1"></a>
-<FONT color="green">002</FONT>     * Copyright 2011-2012 Stephen Connolly.<a name="line.2"></a>
-<FONT color="green">003</FONT>     *<a name="line.3"></a>
-<FONT color="green">004</FONT>     * Licensed under the Apache License, Version 2.0 (the "License");<a name="line.4"></a>
-<FONT color="green">005</FONT>     * you may not use this file except in compliance with the License.<a name="line.5"></a>
-<FONT color="green">006</FONT>     * You may obtain a copy of the License at<a name="line.6"></a>
-<FONT color="green">007</FONT>     *<a name="line.7"></a>
-<FONT color="green">008</FONT>     *     http://www.apache.org/licenses/LICENSE-2.0<a name="line.8"></a>
-<FONT color="green">009</FONT>     *<a name="line.9"></a>
-<FONT color="green">010</FONT>     * Unless required by applicable law or agreed to in writing, software<a name="line.10"></a>
-<FONT color="green">011</FONT>     * distributed under the License is distributed on an "AS IS" BASIS,<a name="line.11"></a>
-<FONT color="green">012</FONT>     * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<a name="line.12"></a>
-<FONT color="green">013</FONT>     * See the License for the specific language governing permissions and<a name="line.13"></a>
-<FONT color="green">014</FONT>     * limitations under the License.<a name="line.14"></a>
-<FONT color="green">015</FONT>     */<a name="line.15"></a>
-<FONT color="green">016</FONT>    <a name="line.16"></a>
-<FONT color="green">017</FONT>    package org.jszip.maven;<a name="line.17"></a>
-<FONT color="green">018</FONT>    <a name="line.18"></a>
-<FONT color="green">019</FONT>    import org.apache.maven.artifact.Artifact;<a name="line.19"></a>
-<FONT color="green">020</FONT>    import org.apache.maven.artifact.ArtifactUtils;<a name="line.20"></a>
-<FONT color="green">021</FONT>    import org.apache.maven.execution.MavenSession;<a name="line.21"></a>
-<FONT color="green">022</FONT>    import org.apache.maven.model.Plugin;<a name="line.22"></a>
-<FONT color="green">023</FONT>    import org.apache.maven.model.PluginExecution;<a name="line.23"></a>
-<FONT color="green">024</FONT>    import org.apache.maven.plugin.MavenPluginManager;<a name="line.24"></a>
-<FONT color="green">025</FONT>    import org.apache.maven.plugin.MojoExecution;<a name="line.25"></a>
-<FONT color="green">026</FONT>    import org.apache.maven.plugin.MojoExecutionException;<a name="line.26"></a>
-<FONT color="green">027</FONT>    import org.apache.maven.plugin.MojoFailureException;<a name="line.27"></a>
-<FONT color="green">028</FONT>    import org.apache.maven.plugin.PluginConfigurationException;<a name="line.28"></a>
-<FONT color="green">029</FONT>    import org.apache.maven.plugin.PluginContainerException;<a name="line.29"></a>
-<FONT color="green">030</FONT>    import org.apache.maven.plugin.descriptor.MojoDescriptor;<a name="line.30"></a>
-<FONT color="green">031</FONT>    import org.apache.maven.plugin.descriptor.PluginDescriptor;<a name="line.31"></a>
-<FONT color="green">032</FONT>    import org.apache.maven.plugins.annotations.Component;<a name="line.32"></a>
-<FONT color="green">033</FONT>    import org.apache.maven.plugins.annotations.LifecyclePhase;<a name="line.33"></a>
-<FONT color="green">034</FONT>    import org.apache.maven.plugins.annotations.Mojo;<a name="line.34"></a>
-<FONT color="green">035</FONT>    import org.apache.maven.plugins.annotations.Parameter;<a name="line.35"></a>
-<FONT color="green">036</FONT>    import org.apache.maven.plugins.annotations.ResolutionScope;<a name="line.36"></a>
-<FONT color="green">037</FONT>    import org.apache.maven.project.MavenProject;<a name="line.37"></a>
-<FONT color="green">038</FONT>    import org.apache.maven.shared.artifact.filter.collection.ArtifactFilterException;<a name="line.38"></a>
-<FONT color="green">039</FONT>    import org.apache.maven.shared.artifact.filter.collection.FilterArtifacts;<a name="line.39"></a>
-<FONT color="green">040</FONT>    import org.apache.maven.shared.artifact.filter.collection.ProjectTransitivityFilter;<a name="line.40"></a>
-<FONT color="green">041</FONT>    import org.apache.maven.shared.artifact.filter.collection.ScopeFilter;<a name="line.41"></a>
-<FONT color="green">042</FONT>    import org.apache.maven.shared.artifact.filter.collection.TypeFilter;<a name="line.42"></a>
-<FONT color="green">043</FONT>    import org.codehaus.plexus.util.DirectoryScanner;<a name="line.43"></a>
-<FONT color="green">044</FONT>    import org.codehaus.plexus.util.IOUtil;<a name="line.44"></a>
-<FONT color="green">045</FONT>    import org.codehaus.plexus.util.StringUtils;<a name="line.45"></a>
-<FONT color="green">046</FONT>    import org.jszip.pseudo.io.PseudoFileSystem;<a name="line.46"></a>
-<FONT color="green">047</FONT>    import org.jszip.rhino.JavaScriptTerminationException;<a name="line.47"></a>
-<FONT color="green">048</FONT>    import org.jszip.rhino.OptimizeContextAction;<a name="line.48"></a>
-<FONT color="green">049</FONT>    import org.mozilla.javascript.Context;<a name="line.49"></a>
-<FONT color="green">050</FONT>    import org.mozilla.javascript.ContextFactory;<a name="line.50"></a>
-<FONT color="green">051</FONT>    import org.mozilla.javascript.JavaScriptException;<a name="line.51"></a>
-<FONT color="green">052</FONT>    import org.mozilla.javascript.tools.shell.Global;<a name="line.52"></a>
-<FONT color="green">053</FONT>    import org.mozilla.javascript.tools.shell.QuitAction;<a name="line.53"></a>
-<FONT color="green">054</FONT>    import org.mozilla.javascript.tools.shell.ShellContextFactory;<a name="line.54"></a>
-<FONT color="green">055</FONT>    <a name="line.55"></a>
-<FONT color="green">056</FONT>    import java.io.File;<a name="line.56"></a>
-<FONT color="green">057</FONT>    import java.io.FileInputStream;<a name="line.57"></a>
-<FONT color="green">058</FONT>    import java.io.IOException;<a name="line.58"></a>
-<FONT color="green">059</FONT>    import java.io.InputStream;<a name="line.59"></a>
-<FONT color="green">060</FONT>    import java.io.InputStreamReader;<a name="line.60"></a>
-<FONT color="green">061</FONT>    import java.util.ArrayList;<a name="line.61"></a>
-<FONT color="green">062</FONT>    import java.util.Collections;<a name="line.62"></a>
-<FONT color="green">063</FONT>    import java.util.List;<a name="line.63"></a>
-<FONT color="green">064</FONT>    import java.util.Set;<a name="line.64"></a>
-<FONT color="green">065</FONT>    import java.util.regex.Matcher;<a name="line.65"></a>
-<FONT color="green">066</FONT>    import java.util.regex.Pattern;<a name="line.66"></a>
-<FONT color="green">067</FONT>    <a name="line.67"></a>
-<FONT color="green">068</FONT>    /**<a name="line.68"></a>
-<FONT color="green">069</FONT>     * Runs the r.js optimizer over the source<a name="line.69"></a>
-<FONT color="green">070</FONT>     */<a name="line.70"></a>
-<FONT color="green">071</FONT>    @Mojo(name = "optimize", defaultPhase = LifecyclePhase.PROCESS_CLASSES,<a name="line.71"></a>
-<FONT color="green">072</FONT>            requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)<a name="line.72"></a>
-<FONT color="green">073</FONT>    public class OptimizeMojo extends AbstractJSZipMojo {<a name="line.73"></a>
-<FONT color="green">074</FONT>    <a name="line.74"></a>
-<FONT color="green">075</FONT>        /**<a name="line.75"></a>
-<FONT color="green">076</FONT>         * Regex for a quoted string which may include escapes.<a name="line.76"></a>
-<FONT color="green">077</FONT>         */<a name="line.77"></a>
-<FONT color="green">078</FONT>        public static final String QUOTED_STRING_WITH_ESCAPES = "'([^\\\\']+|\\\\([btnfr\"'\\\\]|[0-3]?[0-7]{1,"<a name="line.78"></a>
-<FONT color="green">079</FONT>                + "2}|u[0-9a-fA-F]{4}))*'|\"([^\\\\\"]+|\\\\([btnfr\"'\\\\]|[0-3]?[0-7]{1,2}|u[0-9a-fA-F]{4}))*\"";<a name="line.79"></a>
-<FONT color="green">080</FONT>    <a name="line.80"></a>
-<FONT color="green">081</FONT>        /**<a name="line.81"></a>
-<FONT color="green">082</FONT>         * Regex for sniffing the version of r.js being used.<a name="line.82"></a>
-<FONT color="green">083</FONT>         */<a name="line.83"></a>
-<FONT color="green">084</FONT>        public static final String R_JS_VERSION_REGEX = "\\s+version\\s*=\\s*(" + QUOTED_STRING_WITH_ESCAPES + ")";<a name="line.84"></a>
-<FONT color="green">085</FONT>    <a name="line.85"></a>
-<FONT color="green">086</FONT>        /**<a name="line.86"></a>
-<FONT color="green">087</FONT>         * The artifact path mappings for unpacking.<a name="line.87"></a>
-<FONT color="green">088</FONT>         */<a name="line.88"></a>
-<FONT color="green">089</FONT>        @Parameter(property = "mappings")<a name="line.89"></a>
-<FONT color="green">090</FONT>        private Mapping[] mappings;<a name="line.90"></a>
-<FONT color="green">091</FONT>    <a name="line.91"></a>
-<FONT color="green">092</FONT>        /**<a name="line.92"></a>
-<FONT color="green">093</FONT>         * Directory containing the build profiles.<a name="line.93"></a>
-<FONT color="green">094</FONT>         */<a name="line.94"></a>
-<FONT color="green">095</FONT>        @Parameter(defaultValue = "src/build/js", required = true)<a name="line.95"></a>
-<FONT color="green">096</FONT>        private File contentDirectory;<a name="line.96"></a>
-<FONT color="green">097</FONT>    <a name="line.97"></a>
-<FONT color="green">098</FONT>        /**<a name="line.98"></a>
-<FONT color="green">099</FONT>         * Single directory for extra files to include in the WAR.<a name="line.99"></a>
-<FONT color="green">100</FONT>         */<a name="line.100"></a>
-<FONT color="green">101</FONT>        @Parameter(defaultValue = "${basedir}/src/main/webapp", required = true)<a name="line.101"></a>
-<FONT color="green">102</FONT>        private File warSourceDirectory;<a name="line.102"></a>
-<FONT color="green">103</FONT>    <a name="line.103"></a>
-<FONT color="green">104</FONT>        /**<a name="line.104"></a>
-<FONT color="green">105</FONT>         * The directory where the webapp is built.<a name="line.105"></a>
-<FONT color="green">106</FONT>         */<a name="line.106"></a>
-<FONT color="green">107</FONT>        @Parameter(defaultValue = "${project.build.directory}/${project.build.finalName}", required = true)<a name="line.107"></a>
-<FONT color="green">108</FONT>        private File webappDirectory;<a name="line.108"></a>
-<FONT color="green">109</FONT>    <a name="line.109"></a>
-<FONT color="green">110</FONT>        /**<a name="line.110"></a>
-<FONT color="green">111</FONT>         * Directory containing the build profiles.<a name="line.111"></a>
-<FONT color="green">112</FONT>         */<a name="line.112"></a>
-<FONT color="green">113</FONT>        @Parameter(defaultValue = "src/build/js/r.js")<a name="line.113"></a>
-<FONT color="green">114</FONT>        private File customRScript;<a name="line.114"></a>
-<FONT color="green">115</FONT>    <a name="line.115"></a>
-<FONT color="green">116</FONT>        /**<a name="line.116"></a>
-<FONT color="green">117</FONT>         * Skip optimization.<a name="line.117"></a>
-<FONT color="green">118</FONT>         */<a name="line.118"></a>
-<FONT color="green">119</FONT>        @Parameter(property = "jszip.optimize.skip", defaultValue = "false")<a name="line.119"></a>
-<FONT color="green">120</FONT>        private boolean skip;<a name="line.120"></a>
-<FONT color="green">121</FONT>    <a name="line.121"></a>
-<FONT color="green">122</FONT>        /**<a name="line.122"></a>
-<FONT color="green">123</FONT>         * The reactor projects<a name="line.123"></a>
-<FONT color="green">124</FONT>         */<a name="line.124"></a>
-<FONT color="green">125</FONT>        @Parameter(property = "reactorProjects", required = true, readonly = true)<a name="line.125"></a>
-<FONT color="green">126</FONT>        protected List&lt;MavenProject&gt; reactorProjects;<a name="line.126"></a>
-<FONT color="green">127</FONT>    <a name="line.127"></a>
-<FONT color="green">128</FONT>        /**<a name="line.128"></a>
-<FONT color="green">129</FONT>         * The Maven plugin Manager<a name="line.129"></a>
-<FONT color="green">130</FONT>         */<a name="line.130"></a>
-<FONT color="green">131</FONT>        @Component<a name="line.131"></a>
-<FONT color="green">132</FONT>        private MavenPluginManager mavenPluginManager;<a name="line.132"></a>
-<FONT color="green">133</FONT>    <a name="line.133"></a>
-<FONT color="green">134</FONT>        /**<a name="line.134"></a>
-<FONT color="green">135</FONT>         * The current build session instance. This is used for plugin manager API calls.<a name="line.135"></a>
-<FONT color="green">136</FONT>         */<a name="line.136"></a>
-<FONT color="green">137</FONT>        @Parameter(property = "session", required = true, readonly = true)<a name="line.137"></a>
-<FONT color="green">138</FONT>        private MavenSession session;<a name="line.138"></a>
-<FONT color="green">139</FONT>    <a name="line.139"></a>
-<FONT color="green">140</FONT>        /**<a name="line.140"></a>
-<FONT color="green">141</FONT>         * This plugin's descriptor<a name="line.141"></a>
-<FONT color="green">142</FONT>         */<a name="line.142"></a>
-<FONT color="green">143</FONT>        @Parameter(property = "plugin", readonly = true)<a name="line.143"></a>
-<FONT color="green">144</FONT>        private PluginDescriptor pluginDescriptor;<a name="line.144"></a>
-<FONT color="green">145</FONT>    <a name="line.145"></a>
-<FONT color="green">146</FONT>        /**<a name="line.146"></a>
-<FONT color="green">147</FONT>         * A list of &amp;lt;include&amp;gt; elements specifying the build profiles (by pattern) that should be included in<a name="line.147"></a>
-<FONT color="green">148</FONT>         * optimization.<a name="line.148"></a>
-<FONT color="green">149</FONT>         */<a name="line.149"></a>
-<FONT color="green">150</FONT>        @Parameter(property = "includes")<a name="line.150"></a>
-<FONT color="green">151</FONT>        private List&lt;String&gt; includes;<a name="line.151"></a>
-<FONT color="green">152</FONT>    <a name="line.152"></a>
-<FONT color="green">153</FONT>        /**<a name="line.153"></a>
-<FONT color="green">154</FONT>         * A list of &amp;lt;exclude&amp;gt; elements specifying the build profiles (by pattern) that should be excluded from<a name="line.154"></a>
-<FONT color="green">155</FONT>         * optimization.<a name="line.155"></a>
-<FONT color="green">156</FONT>         */<a name="line.156"></a>
-<FONT color="green">157</FONT>        @Parameter(property = "excludes")<a name="line.157"></a>
-<FONT color="green">158</FONT>        private List&lt;String&gt; excludes;<a name="line.158"></a>
-<FONT color="green">159</FONT>    <a name="line.159"></a>
-<FONT color="green">160</FONT>        /**<a name="line.160"></a>
-<FONT color="green">161</FONT>         * @see org.apache.maven.plugin.Mojo#execute()<a name="line.161"></a>
-<FONT color="green">162</FONT>         */<a name="line.162"></a>
-<FONT color="green">163</FONT>        public void execute() throws MojoExecutionException, MojoFailureException {<a name="line.163"></a>
-<FONT color="green">164</FONT>            if (skip) {<a name="line.164"></a>
-<FONT color="green">165</FONT>                getLog().info("Optimization skipped.");<a name="line.165"></a>
-<FONT color="green">166</FONT>                return;<a name="line.166"></a>
-<FONT color="green">167</FONT>            }<a name="line.167"></a>
-<FONT color="green">168</FONT>            if (!contentDirectory.exists()) {<a name="line.168"></a>
-<FONT color="green">169</FONT>                getLog().info("Nothing to do, no r.js build profiles in " + contentDirectory);<a name="line.169"></a>
-<FONT color="green">170</FONT>                return;<a name="line.170"></a>
-<FONT color="green">171</FONT>            }<a name="line.171"></a>
-<FONT color="green">172</FONT>            if (!contentDirectory.isDirectory()) {<a name="line.172"></a>
-<FONT color="green">173</FONT>                throw new MojoExecutionException("Build profile directory '" + contentDirectory + "' is not a directory");<a name="line.173"></a>
-<FONT color="green">174</FONT>            }<a name="line.174"></a>
-<FONT color="green">175</FONT>            if (webappDirectory.isFile()) {<a name="line.175"></a>
-<FONT color="green">176</FONT>                throw new MojoExecutionException("Webapp directory '" + webappDirectory + "' is not a directory");<a name="line.176"></a>
-<FONT color="green">177</FONT>            }<a name="line.177"></a>
-<FONT color="green">178</FONT>            if (!webappDirectory.isDirectory() &amp;&amp; !webappDirectory.mkdirs()) {<a name="line.178"></a>
-<FONT color="green">179</FONT>                throw new MojoExecutionException("Could not create Webapp directory '" + webappDirectory + "'");<a name="line.179"></a>
-<FONT color="green">180</FONT>            }<a name="line.180"></a>
-<FONT color="green">181</FONT>            String source;<a name="line.181"></a>
-<FONT color="green">182</FONT>            int lineNo = 0;<a name="line.182"></a>
-<FONT color="green">183</FONT>            InputStream inputStream = null;<a name="line.183"></a>
-<FONT color="green">184</FONT>            InputStreamReader reader = null;<a name="line.184"></a>
-<FONT color="green">185</FONT>            try {<a name="line.185"></a>
-<FONT color="green">186</FONT>                if (customRScript.isFile()) {<a name="line.186"></a>
-<FONT color="green">187</FONT>                    getLog().debug("Using custom r.js from: " + customRScript);<a name="line.187"></a>
-<FONT color="green">188</FONT>                    inputStream = new FileInputStream(customRScript);<a name="line.188"></a>
-<FONT color="green">189</FONT>                } else {<a name="line.189"></a>
-<FONT color="green">190</FONT>                    getLog().debug("Using bundled r.js");<a name="line.190"></a>
-<FONT color="green">191</FONT>                    inputStream = getClass().getResourceAsStream("/org/jszip/maven/r.js");<a name="line.191"></a>
-<FONT color="green">192</FONT>                }<a name="line.192"></a>
-<FONT color="green">193</FONT>                source = IOUtil.toString(inputStream, "UTF-8");<a name="line.193"></a>
-<FONT color="green">194</FONT>                if (source.startsWith("#!")) {<a name="line.194"></a>
-<FONT color="green">195</FONT>                    int i1 = source.indexOf('\n');<a name="line.195"></a>
-<FONT color="green">196</FONT>                    int i2 = source.indexOf('\r');<a name="line.196"></a>
-<FONT color="green">197</FONT>                    int index = (i1 == -1 || i2 == -1) ? Math.max(i1, i2) : Math.min(i1, i2);<a name="line.197"></a>
-<FONT color="green">198</FONT>                    if (index &gt; 0) {<a name="line.198"></a>
-<FONT color="green">199</FONT>                        source = source.substring(index);<a name="line.199"></a>
-<FONT color="green">200</FONT>                        lineNo++;<a name="line.200"></a>
-<FONT color="green">201</FONT>                    }<a name="line.201"></a>
-<FONT color="green">202</FONT>                }<a name="line.202"></a>
-<FONT color="green">203</FONT>            } catch (IOException e) {<a name="line.203"></a>
-<FONT color="green">204</FONT>                throw new MojoExecutionException(e.getMessage(), e);<a name="line.204"></a>
-<FONT color="green">205</FONT>            } finally {<a name="line.205"></a>
-<FONT color="green">206</FONT>                IOUtil.close(reader);<a name="line.206"></a>
-<FONT color="green">207</FONT>                IOUtil.close(inputStream);<a name="line.207"></a>
-<FONT color="green">208</FONT>            }<a name="line.208"></a>
-<FONT color="green">209</FONT>    <a name="line.209"></a>
-<FONT color="green">210</FONT>            String sourceVersion = "unknown";<a name="line.210"></a>
-<FONT color="green">211</FONT>            Pattern rJsVersionPattern = Pattern.compile(R_JS_VERSION_REGEX);<a name="line.211"></a>
-<FONT color="green">212</FONT>            Matcher rJsVersionMatcher = rJsVersionPattern.matcher(source);<a name="line.212"></a>
-<FONT color="green">213</FONT>            if (rJsVersionMatcher.find()) {<a name="line.213"></a>
-<FONT color="green">214</FONT>                sourceVersion = rJsVersionMatcher.group(1);<a name="line.214"></a>
-<FONT color="green">215</FONT>            }<a name="line.215"></a>
-<FONT color="green">216</FONT>    <a name="line.216"></a>
-<FONT color="green">217</FONT>            getLog().info("Using r.js version " + sourceVersion);<a name="line.217"></a>
-<FONT color="green">218</FONT>    <a name="line.218"></a>
-<FONT color="green">219</FONT>            List&lt;PseudoFileSystem.Layer&gt; layers = buildVirtualFileSystemLayers();<a name="line.219"></a>
-<FONT color="green">220</FONT>    <a name="line.220"></a>
-<FONT color="green">221</FONT>            final ContextFactory contextFactory = new ShellContextFactory();<a name="line.221"></a>
-<FONT color="green">222</FONT>            final Global global = new Global();<a name="line.222"></a>
-<FONT color="green">223</FONT>            global.initQuitAction(new QuitAction() {<a name="line.223"></a>
-<FONT color="green">224</FONT>                public void quit(Context context, int exitCode) {<a name="line.224"></a>
-<FONT color="green">225</FONT>                    if (exitCode != 0) {<a name="line.225"></a>
-<FONT color="green">226</FONT>                        throw new JavaScriptTerminationException("Script exited with exit code of " + exitCode, exitCode);<a name="line.226"></a>
-<FONT color="green">227</FONT>                    }<a name="line.227"></a>
-<FONT color="green">228</FONT>                }<a name="line.228"></a>
-<FONT color="green">229</FONT>            });<a name="line.229"></a>
-<FONT color="green">230</FONT>            if (!global.isInitialized()) {<a name="line.230"></a>
-<FONT color="green">231</FONT>                global.init(contextFactory);<a name="line.231"></a>
-<FONT color="green">232</FONT>            }<a name="line.232"></a>
-<FONT color="green">233</FONT>            DirectoryScanner scanner = new DirectoryScanner();<a name="line.233"></a>
-<FONT color="green">234</FONT>    <a name="line.234"></a>
-<FONT color="green">235</FONT>            scanner.setBasedir(contentDirectory);<a name="line.235"></a>
-<FONT color="green">236</FONT>    <a name="line.236"></a>
-<FONT color="green">237</FONT>            if (includes != null &amp;&amp; !includes.isEmpty()) {<a name="line.237"></a>
-<FONT color="green">238</FONT>                scanner.setIncludes(processIncludesExcludes(includes));<a name="line.238"></a>
-<FONT color="green">239</FONT>            } else {<a name="line.239"></a>
-<FONT color="green">240</FONT>                scanner.setIncludes(new String[]{"**/*.js"});<a name="line.240"></a>
-<FONT color="green">241</FONT>            }<a name="line.241"></a>
-<FONT color="green">242</FONT>    <a name="line.242"></a>
-<FONT color="green">243</FONT>            if (excludes != null &amp;&amp; !excludes.isEmpty()) {<a name="line.243"></a>
-<FONT color="green">244</FONT>                scanner.setExcludes(processIncludesExcludes(excludes));<a name="line.244"></a>
-<FONT color="green">245</FONT>            } else {<a name="line.245"></a>
-<FONT color="green">246</FONT>                scanner.setExcludes(new String[]{"r.js"});<a name="line.246"></a>
-<FONT color="green">247</FONT>            }<a name="line.247"></a>
-<FONT color="green">248</FONT>    <a name="line.248"></a>
-<FONT color="green">249</FONT>            scanner.scan();<a name="line.249"></a>
-<FONT color="green">250</FONT>    <a name="line.250"></a>
-<FONT color="green">251</FONT>            for (String path : scanner.getIncludedFiles()) {<a name="line.251"></a>
-<FONT color="green">252</FONT>                File profileJs = new File(contentDirectory, path);<a name="line.252"></a>
-<FONT color="green">253</FONT>                PseudoFileSystem.Layer[] layersArray = layers.toArray(new PseudoFileSystem.Layer[layers.size() + 1]);<a name="line.253"></a>
-<FONT color="green">254</FONT>                layersArray[layers.size()] = new PseudoFileSystem.FileLayer("build", profileJs.getParentFile());<a name="line.254"></a>
-<FONT color="green">255</FONT>                try {<a name="line.255"></a>
-<FONT color="green">256</FONT>                    Object rv = contextFactory<a name="line.256"></a>
-<FONT color="green">257</FONT>                            .call(new OptimizeContextAction(getLog(), global, profileJs, source, lineNo, layersArray));<a name="line.257"></a>
-<FONT color="green">258</FONT>                    if (rv instanceof Number) {<a name="line.258"></a>
-<FONT color="green">259</FONT>                        if (((Number) rv).intValue() != 0) {<a name="line.259"></a>
-<FONT color="green">260</FONT>                            throw new MojoExecutionException(<a name="line.260"></a>
-<FONT color="green">261</FONT>                                    "Non-zero exit code of " + ((Number) rv).intValue()<a name="line.261"></a>
-<FONT color="green">262</FONT>                                            + " when trying to optimize profile " + profileJs);<a name="line.262"></a>
-<FONT color="green">263</FONT>                        }<a name="line.263"></a>
-<FONT color="green">264</FONT>                    }<a name="line.264"></a>
-<FONT color="green">265</FONT>                } catch (JavaScriptException e) {<a name="line.265"></a>
-<FONT color="green">266</FONT>                    throw new MojoExecutionException(<a name="line.266"></a>
-<FONT color="green">267</FONT>                            "Uncaught exception when trying to optimize profile " + profileJs, e);<a name="line.267"></a>
-<FONT color="green">268</FONT>                } catch (JavaScriptTerminationException e) {<a name="line.268"></a>
-<FONT color="green">269</FONT>                    throw new MojoExecutionException(<a name="line.269"></a>
-<FONT color="green">270</FONT>                            "Non-zero exit code of " + e.getExitCode() + " when trying to optimize profile " + profileJs);<a name="line.270"></a>
-<FONT color="green">271</FONT>                }<a name="line.271"></a>
-<FONT color="green">272</FONT>            }<a name="line.272"></a>
-<FONT color="green">273</FONT>        }<a name="line.273"></a>
-<FONT color="green">274</FONT>    <a name="line.274"></a>
-<FONT color="green">275</FONT>        private String getPath(Artifact artifact) {<a name="line.275"></a>
-<FONT color="green">276</FONT>            if (mappings == null) {<a name="line.276"></a>
-<FONT color="green">277</FONT>                return "/virtual";<a name="line.277"></a>
-<FONT color="green">278</FONT>            }<a name="line.278"></a>
-<FONT color="green">279</FONT>            for (Mapping mapping: mappings) {<a name="line.279"></a>
-<FONT color="green">280</FONT>                if (mapping.isMatch(artifact)) {<a name="line.280"></a>
-<FONT color="green">281</FONT>                    final String path = StringUtils.clean(mapping.getPath());<a name="line.281"></a>
-<FONT color="green">282</FONT>                    if (StringUtils.isBlank(path) || "/".equals(path)) {<a name="line.282"></a>
-<FONT color="green">283</FONT>                        return "/virtual";<a name="line.283"></a>
-<FONT color="green">284</FONT>                    }<a name="line.284"></a>
-<FONT color="green">285</FONT>                    return "/virtual/" + StringUtils.strip(path, "/");<a name="line.285"></a>
-<FONT color="green">286</FONT>                }<a name="line.286"></a>
-<FONT color="green">287</FONT>            }<a name="line.287"></a>
-<FONT color="green">288</FONT>            return "/virtual";<a name="line.288"></a>
-<FONT color="green">289</FONT>        }<a name="line.289"></a>
-<FONT color="green">290</FONT>    <a name="line.290"></a>
-<FONT color="green">291</FONT>        private List&lt;PseudoFileSystem.Layer&gt; buildVirtualFileSystemLayers() throws MojoExecutionException {<a name="line.291"></a>
-<FONT color="green">292</FONT>            List&lt;PseudoFileSystem.Layer&gt; layers = new ArrayList&lt;PseudoFileSystem.Layer&gt;();<a name="line.292"></a>
-<FONT color="green">293</FONT>            layers.add(new PseudoFileSystem.FileLayer("/target", webappDirectory));<a name="line.293"></a>
-<FONT color="green">294</FONT>            layers.add(new PseudoFileSystem.FileLayer("/virtual", warSourceDirectory));<a name="line.294"></a>
-<FONT color="green">295</FONT>            FilterArtifacts filter = new FilterArtifacts();<a name="line.295"></a>
-<FONT color="green">296</FONT>    <a name="line.296"></a>
-<FONT color="green">297</FONT>            filter.addFilter(new ProjectTransitivityFilter(project.getDependencyArtifacts(), false));<a name="line.297"></a>
-<FONT color="green">298</FONT>    <a name="line.298"></a>
-<FONT color="green">299</FONT>            filter.addFilter(new ScopeFilter("runtime", ""));<a name="line.299"></a>
-<FONT color="green">300</FONT>    <a name="line.300"></a>
-<FONT color="green">301</FONT>            filter.addFilter(new TypeFilter(JSZIP_TYPE, ""));<a name="line.301"></a>
-<FONT color="green">302</FONT>    <a name="line.302"></a>
-<FONT color="green">303</FONT>            // start with all artifacts.<a name="line.303"></a>
-<FONT color="green">304</FONT>            Set&lt;Artifact&gt; artifacts = project.getArtifacts();<a name="line.304"></a>
-<FONT color="green">305</FONT>    <a name="line.305"></a>
-<FONT color="green">306</FONT>            // perform filtering<a name="line.306"></a>
-<FONT color="green">307</FONT>            try {<a name="line.307"></a>
-<FONT color="green">308</FONT>                artifacts = filter.filter(artifacts);<a name="line.308"></a>
-<FONT color="green">309</FONT>            } catch (ArtifactFilterException e) {<a name="line.309"></a>
-<FONT color="green">310</FONT>                throw new MojoExecutionException(e.getMessage(), e);<a name="line.310"></a>
-<FONT color="green">311</FONT>            }<a name="line.311"></a>
-<FONT color="green">312</FONT>    <a name="line.312"></a>
-<FONT color="green">313</FONT>            for (Artifact artifact : artifacts) {<a name="line.313"></a>
-<FONT color="green">314</FONT>                String path = getPath(artifact);<a name="line.314"></a>
-<FONT color="green">315</FONT>                getLog().info("Adding " + ArtifactUtils.key(artifact) + " to virtual filesystem");<a name="line.315"></a>
-<FONT color="green">316</FONT>                File file = artifact.getFile();<a name="line.316"></a>
-<FONT color="green">317</FONT>                if (file.isDirectory()) {<a name="line.317"></a>
-<FONT color="green">318</FONT>                    MavenProject fromReactor = findProject(reactorProjects, artifact);<a name="line.318"></a>
-<FONT color="green">319</FONT>                    if (fromReactor != null) {<a name="line.319"></a>
-<FONT color="green">320</FONT>                        MavenSession session = this.session.clone();<a name="line.320"></a>
-<FONT color="green">321</FONT>                        session.setCurrentProject(fromReactor);<a name="line.321"></a>
-<FONT color="green">322</FONT>                        Plugin plugin = findThisPluginInProject(fromReactor);<a name="line.322"></a>
-<FONT color="green">323</FONT>                        try {<a name="line.323"></a>
-<FONT color="green">324</FONT>                            // we cheat here and use our version of the plugin... but this is less of a cheat than the only<a name="line.324"></a>
-<FONT color="green">325</FONT>                            // other way which is via reflection.<a name="line.325"></a>
-<FONT color="green">326</FONT>                            MojoDescriptor jszipDescriptor = findMojoDescriptor(this.pluginDescriptor, JSZipMojo.class);<a name="line.326"></a>
-<FONT color="green">327</FONT>    <a name="line.327"></a>
-<FONT color="green">328</FONT>                            for (PluginExecution pluginExecution : plugin.getExecutions()) {<a name="line.328"></a>
-<FONT color="green">329</FONT>                                if (!pluginExecution.getGoals().contains(jszipDescriptor.getGoal())) {<a name="line.329"></a>
-<FONT color="green">330</FONT>                                    continue;<a name="line.330"></a>
-<FONT color="green">331</FONT>                                }<a name="line.331"></a>
-<FONT color="green">332</FONT>                                MojoExecution mojoExecution =<a name="line.332"></a>
-<FONT color="green">333</FONT>                                        createMojoExecution(plugin, pluginExecution, jszipDescriptor);<a name="line.333"></a>
-<FONT color="green">334</FONT>                                JSZipMojo mojo = (JSZipMojo) mavenPluginManager<a name="line.334"></a>
-<FONT color="green">335</FONT>                                        .getConfiguredMojo(org.apache.maven.plugin.Mojo.class, session, mojoExecution);<a name="line.335"></a>
-<FONT color="green">336</FONT>                                try {<a name="line.336"></a>
-<FONT color="green">337</FONT>                                    File contentDirectory = mojo.getContentDirectory();<a name="line.337"></a>
-<FONT color="green">338</FONT>                                    if (contentDirectory.isDirectory()) {<a name="line.338"></a>
-<FONT color="green">339</FONT>                                        getLog().debug("Merging directory " + contentDirectory + " into " + path);<a name="line.339"></a>
-<FONT color="green">340</FONT>                                        layers.add(new PseudoFileSystem.FileLayer(path, contentDirectory));<a name="line.340"></a>
-<FONT color="green">341</FONT>                                    }<a name="line.341"></a>
-<FONT color="green">342</FONT>                                    File resourcesDirectory = mojo.getResourcesDirectory();<a name="line.342"></a>
-<FONT color="green">343</FONT>                                    if (resourcesDirectory.isDirectory()) {<a name="line.343"></a>
-<FONT color="green">344</FONT>                                        getLog().debug("Merging directory " + contentDirectory + " into " + path);<a name="line.344"></a>
-<FONT color="green">345</FONT>                                        layers.add(new PseudoFileSystem.FileLayer(path, resourcesDirectory));<a name="line.345"></a>
-<FONT color="green">346</FONT>                                    }<a name="line.346"></a>
-<FONT color="green">347</FONT>                                } finally {<a name="line.347"></a>
-<FONT color="green">348</FONT>                                    mavenPluginManager.releaseMojo(mojo, mojoExecution);<a name="line.348"></a>
-<FONT color="green">349</FONT>                                }<a name="line.349"></a>
-<FONT color="green">350</FONT>                            }<a name="line.350"></a>
-<FONT color="green">351</FONT>                        } catch (PluginConfigurationException e) {<a name="line.351"></a>
-<FONT color="green">352</FONT>                            throw new MojoExecutionException(e.getMessage(), e);<a name="line.352"></a>
-<FONT color="green">353</FONT>                        } catch (PluginContainerException e) {<a name="line.353"></a>
-<FONT color="green">354</FONT>                            throw new MojoExecutionException(e.getMessage(), e);<a name="line.354"></a>
-<FONT color="green">355</FONT>                        }<a name="line.355"></a>
-<FONT color="green">356</FONT>                    } else {<a name="line.356"></a>
-<FONT color="green">357</FONT>                        throw new MojoExecutionException("Cannot find jzsip artifact: " + artifact.getId());<a name="line.357"></a>
-<FONT color="green">358</FONT>                    }<a name="line.358"></a>
-<FONT color="green">359</FONT>                } else {<a name="line.359"></a>
-<FONT color="green">360</FONT>                    try {<a name="line.360"></a>
-<FONT color="green">361</FONT>                        getLog().debug("Merging .zip file " + file + " into " + path);<a name="line.361"></a>
-<FONT color="green">362</FONT>                        layers.add(new PseudoFileSystem.ZipLayer(path, file));<a name="line.362"></a>
-<FONT color="green">363</FONT>                    } catch (IOException e) {<a name="line.363"></a>
-<FONT color="green">364</FONT>                        throw new MojoExecutionException(e.getMessage(), e);<a name="line.364"></a>
-<FONT color="green">365</FONT>                    }<a name="line.365"></a>
-<FONT color="green">366</FONT>                }<a name="line.366"></a>
-<FONT color="green">367</FONT>            }<a name="line.367"></a>
-<FONT color="green">368</FONT>            return layers;<a name="line.368"></a>
-<FONT color="green">369</FONT>        }<a name="line.369"></a>
-<FONT color="green">370</FONT>    <a name="line.370"></a>
-<FONT color="green">371</FONT>        private static String[] processIncludesExcludes(List&lt;String&gt; list) {<a name="line.371"></a>
-<FONT color="green">372</FONT>            List&lt;String&gt; result = new ArrayList&lt;String&gt;();<a name="line.372"></a>
-<FONT color="green">373</FONT>            for (String entry : list) {<a name="line.373"></a>
-<FONT color="green">374</FONT>                String[] entries = entry.split(",");<a name="line.374"></a>
-<FONT color="green">375</FONT>                Collections.addAll(result, entries);<a name="line.375"></a>
-<FONT color="green">376</FONT>            }<a name="line.376"></a>
-<FONT color="green">377</FONT>            return result.toArray(new String[result.size()]);<a name="line.377"></a>
-<FONT color="green">378</FONT>        }<a name="line.378"></a>
-<FONT color="green">379</FONT>    <a name="line.379"></a>
-<FONT color="green">380</FONT>    }<a name="line.380"></a>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html lang="en">
+<head>
+<title>Source code</title>
+<link rel="stylesheet" type="text/css" href="../../../../stylesheet.css" title="Style">
+</head>
+<body>
+<div class="sourceContainer">
+<pre><span class="sourceLineNo">001</span>/*<a name="line.1"></a>
+<span class="sourceLineNo">002</span> * Copyright 2011-2012 Stephen Connolly.<a name="line.2"></a>
+<span class="sourceLineNo">003</span> *<a name="line.3"></a>
+<span class="sourceLineNo">004</span> * Licensed under the Apache License, Version 2.0 (the "License");<a name="line.4"></a>
+<span class="sourceLineNo">005</span> * you may not use this file except in compliance with the License.<a name="line.5"></a>
+<span class="sourceLineNo">006</span> * You may obtain a copy of the License at<a name="line.6"></a>
+<span class="sourceLineNo">007</span> *<a name="line.7"></a>
+<span class="sourceLineNo">008</span> *     http://www.apache.org/licenses/LICENSE-2.0<a name="line.8"></a>
+<span class="sourceLineNo">009</span> *<a name="line.9"></a>
+<span class="sourceLineNo">010</span> * Unless required by applicable law or agreed to in writing, software<a name="line.10"></a>
+<span class="sourceLineNo">011</span> * distributed under the License is distributed on an "AS IS" BASIS,<a name="line.11"></a>
+<span class="sourceLineNo">012</span> * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.<a name="line.12"></a>
+<span class="sourceLineNo">013</span> * See the License for the specific language governing permissions and<a name="line.13"></a>
+<span class="sourceLineNo">014</span> * limitations under the License.<a name="line.14"></a>
+<span class="sourceLineNo">015</span> */<a name="line.15"></a>
+<span class="sourceLineNo">016</span><a name="line.16"></a>
+<span class="sourceLineNo">017</span>package org.jszip.maven;<a name="line.17"></a>
+<span class="sourceLineNo">018</span><a name="line.18"></a>
+<span class="sourceLineNo">019</span>import org.apache.maven.plugin.MojoExecutionException;<a name="line.19"></a>
+<span class="sourceLineNo">020</span>import org.apache.maven.plugin.MojoFailureException;<a name="line.20"></a>
+<span class="sourceLineNo">021</span>import org.apache.maven.plugins.annotations.LifecyclePhase;<a name="line.21"></a>
+<span class="sourceLineNo">022</span>import org.apache.maven.plugins.annotations.Mojo;<a name="line.22"></a>
+<span class="sourceLineNo">023</span>import org.apache.maven.plugins.annotations.Parameter;<a name="line.23"></a>
+<span class="sourceLineNo">024</span>import org.apache.maven.plugins.annotations.ResolutionScope;<a name="line.24"></a>
+<span class="sourceLineNo">025</span>import org.codehaus.plexus.util.DirectoryScanner;<a name="line.25"></a>
+<span class="sourceLineNo">026</span>import org.codehaus.plexus.util.IOUtil;<a name="line.26"></a>
+<span class="sourceLineNo">027</span>import org.jszip.pseudo.io.PseudoFileSystem;<a name="line.27"></a>
+<span class="sourceLineNo">028</span>import org.jszip.rhino.JavaScriptTerminationException;<a name="line.28"></a>
+<span class="sourceLineNo">029</span>import org.jszip.rhino.OptimizeContextAction;<a name="line.29"></a>
+<span class="sourceLineNo">030</span>import org.mozilla.javascript.Context;<a name="line.30"></a>
+<span class="sourceLineNo">031</span>import org.mozilla.javascript.ContextFactory;<a name="line.31"></a>
+<span class="sourceLineNo">032</span>import org.mozilla.javascript.JavaScriptException;<a name="line.32"></a>
+<span class="sourceLineNo">033</span>import org.mozilla.javascript.tools.shell.Global;<a name="line.33"></a>
+<span class="sourceLineNo">034</span>import org.mozilla.javascript.tools.shell.QuitAction;<a name="line.34"></a>
+<span class="sourceLineNo">035</span>import org.mozilla.javascript.tools.shell.ShellContextFactory;<a name="line.35"></a>
+<span class="sourceLineNo">036</span><a name="line.36"></a>
+<span class="sourceLineNo">037</span>import java.io.File;<a name="line.37"></a>
+<span class="sourceLineNo">038</span>import java.io.FileInputStream;<a name="line.38"></a>
+<span class="sourceLineNo">039</span>import java.io.IOException;<a name="line.39"></a>
+<span class="sourceLineNo">040</span>import java.io.InputStream;<a name="line.40"></a>
+<span class="sourceLineNo">041</span>import java.io.InputStreamReader;<a name="line.41"></a>
+<span class="sourceLineNo">042</span>import java.util.List;<a name="line.42"></a>
+<span class="sourceLineNo">043</span>import java.util.regex.Matcher;<a name="line.43"></a>
+<span class="sourceLineNo">044</span>import java.util.regex.Pattern;<a name="line.44"></a>
+<span class="sourceLineNo">045</span><a name="line.45"></a>
+<span class="sourceLineNo">046</span>/**<a name="line.46"></a>
+<span class="sourceLineNo">047</span> * Runs the r.js optimizer over the source<a name="line.47"></a>
+<span class="sourceLineNo">048</span> */<a name="line.48"></a>
+<span class="sourceLineNo">049</span>@Mojo(name = "optimize", defaultPhase = LifecyclePhase.PROCESS_CLASSES,<a name="line.49"></a>
+<span class="sourceLineNo">050</span>        requiresDependencyResolution = ResolutionScope.COMPILE_PLUS_RUNTIME)<a name="line.50"></a>
+<span class="sourceLineNo">051</span>public class OptimizeMojo extends AbstractPseudoFileSystemProcessorMojo {<a name="line.51"></a>
+<span class="sourceLineNo">052</span><a name="line.52"></a>
+<span class="sourceLineNo">053</span>    /**<a name="line.53"></a>
+<span class="sourceLineNo">054</span>     * Regex for a quoted string which may include escapes.<a name="line.54"></a>
+<span class="sourceLineNo">055</span>     */<a name="line.55"></a>
+<span class="sourceLineNo">056</span>    public static final String QUOTED_STRING_WITH_ESCAPES = "'([^\\\\']+|\\\\([btnfr\"'\\\\]|[0-3]?[0-7]{1,"<a name="line.56"></a>
+<span class="sourceLineNo">057</span>            + "2}|u[0-9a-fA-F]{4}))*'|\"([^\\\\\"]+|\\\\([btnfr\"'\\\\]|[0-3]?[0-7]{1,2}|u[0-9a-fA-F]{4}))*\"";<a name="line.57"></a>
+<span class="sourceLineNo">058</span><a name="line.58"></a>
+<span class="sourceLineNo">059</span>    /**<a name="line.59"></a>
+<span class="sourceLineNo">060</span>     * Regex for sniffing the version of r.js being used.<a name="line.60"></a>
+<span class="sourceLineNo">061</span>     */<a name="line.61"></a>
+<span class="sourceLineNo">062</span>    public static final String R_JS_VERSION_REGEX = "\\s+version\\s*=\\s*(" + QUOTED_STRING_WITH_ESCAPES + ")";<a name="line.62"></a>
+<span class="sourceLineNo">063</span><a name="line.63"></a>
+<span class="sourceLineNo">064</span>    /**<a name="line.64"></a>
+<span class="sourceLineNo">065</span>     * Directory containing the build profiles.<a name="line.65"></a>
+<span class="sourceLineNo">066</span>     */<a name="line.66"></a>
+<span class="sourceLineNo">067</span>    @Parameter(defaultValue = "src/build/js", required = true)<a name="line.67"></a>
+<span class="sourceLineNo">068</span>    private File contentDirectory;<a name="line.68"></a>
+<span class="sourceLineNo">069</span><a name="line.69"></a>
+<span class="sourceLineNo">070</span>    /**<a name="line.70"></a>
+<span class="sourceLineNo">071</span>     * Directory containing the build profiles.<a name="line.71"></a>
+<span class="sourceLineNo">072</span>     */<a name="line.72"></a>
+<span class="sourceLineNo">073</span>    @Parameter(defaultValue = "src/build/js/r.js")<a name="line.73"></a>
+<span class="sourceLineNo">074</span>    private File customRScript;<a name="line.74"></a>
+<span class="sourceLineNo">075</span><a name="line.75"></a>
+<span class="sourceLineNo">076</span>    /**<a name="line.76"></a>
+<span class="sourceLineNo">077</span>     * Skip optimization.<a name="line.77"></a>
+<span class="sourceLineNo">078</span>     */<a name="line.78"></a>
+<span class="sourceLineNo">079</span>    @Parameter(property = "jszip.optimize.skip", defaultValue = "false")<a name="line.79"></a>
+<span class="sourceLineNo">080</span>    private boolean skip;<a name="line.80"></a>
+<span class="sourceLineNo">081</span><a name="line.81"></a>
+<span class="sourceLineNo">082</span>    /**<a name="line.82"></a>
+<span class="sourceLineNo">083</span>     * A list of &amp;lt;include&amp;gt; elements specifying the build profiles (by pattern) that should be included in<a name="line.83"></a>
+<span class="sourceLineNo">084</span>     * optimization.<a name="line.84"></a>
+<span class="sourceLineNo">085</span>     */<a name="line.85"></a>
+<span class="sourceLineNo">086</span>    @Parameter(property = "includes")<a name="line.86"></a>
+<span class="sourceLineNo">087</span>    private List&lt;String&gt; includes;<a name="line.87"></a>
+<span class="sourceLineNo">088</span><a name="line.88"></a>
+<span class="sourceLineNo">089</span>    /**<a name="line.89"></a>
+<span class="sourceLineNo">090</span>     * A list of &amp;lt;exclude&amp;gt; elements specifying the build profiles (by pattern) that should be excluded from<a name="line.90"></a>
+<span class="sourceLineNo">091</span>     * optimization.<a name="line.91"></a>
+<span class="sourceLineNo">092</span>     */<a name="line.92"></a>
+<span class="sourceLineNo">093</span>    @Parameter(property = "excludes")<a name="line.93"></a>
+<span class="sourceLineNo">094</span>    private List&lt;String&gt; excludes;<a name="line.94"></a>
+<span class="sourceLineNo">095</span><a name="line.95"></a>
+<span class="sourceLineNo">096</span>    /**<a name="line.96"></a>
+<span class="sourceLineNo">097</span>     * @see org.apache.maven.plugin.Mojo#execute()<a name="line.97"></a>
+<span class="sourceLineNo">098</span>     */<a name="line.98"></a>
+<span class="sourceLineNo">099</span>    public void execute() throws MojoExecutionException, MojoFailureException {<a name="line.99"></a>
+<span class="sourceLineNo">100</span>        if (skip) {<a name="line.100"></a>
+<span class="sourceLineNo">101</span>            getLog().info("Optimization skipped.");<a name="line.101"></a>
+<span class="sourceLineNo">102</span>            return;<a name="line.102"></a>
+<span class="sourceLineNo">103</span>        }<a name="line.103"></a>
+<span class="sourceLineNo">104</span>        if (!contentDirectory.exists()) {<a name="line.104"></a>
+<span class="sourceLineNo">105</span>            getLog().info("Nothing to do, no r.js build profiles in " + contentDirectory);<a name="line.105"></a>
+<span class="sourceLineNo">106</span>            return;<a name="line.106"></a>
+<span class="sourceLineNo">107</span>        }<a name="line.107"></a>
+<span class="sourceLineNo">108</span>        if (!contentDirectory.isDirectory()) {<a name="line.108"></a>
+<span class="sourceLineNo">109</span>            throw new MojoExecutionException("Build profile directory '" + contentDirectory + "' is not a directory");<a name="line.109"></a>
+<span class="sourceLineNo">110</span>        }<a name="line.110"></a>
+<span class="sourceLineNo">111</span>        if (webappDirectory.isFile()) {<a name="line.111"></a>
+<span class="sourceLineNo">112</span>            throw new MojoExecutionException("Webapp directory '" + webappDirectory + "' is not a directory");<a name="line.112"></a>
+<span class="sourceLineNo">113</span>        }<a name="line.113"></a>
+<span class="sourceLineNo">114</span>        if (!webappDirectory.isDirectory() &amp;&amp; !webappDirectory.mkdirs()) {<a name="line.114"></a>
+<span class="sourceLineNo">115</span>            throw new MojoExecutionException("Could not create Webapp directory '" + webappDirectory + "'");<a name="line.115"></a>
+<span class="sourceLineNo">116</span>        }<a name="line.116"></a>
+<span class="sourceLineNo">117</span>        String source;<a name="line.117"></a>
+<span class="sourceLineNo">118</span>        int lineNo = 0;<a name="line.118"></a>
+<span class="sourceLineNo">119</span>        InputStream inputStream = null;<a name="line.119"></a>
+<span class="sourceLineNo">120</span>        InputStreamReader reader = null;<a name="line.120"></a>
+<span class="sourceLineNo">121</span>        try {<a name="line.121"></a>
+<span class="sourceLineNo">122</span>            if (customRScript.isFile()) {<a name="line.122"></a>
+<span class="sourceLineNo">123</span>                getLog().debug("Using custom r.js from: " + customRScript);<a name="line.123"></a>
+<span class="sourceLineNo">124</span>                inputStream = new FileInputStream(customRScript);<a name="line.124"></a>
+<span class="sourceLineNo">125</span>            } else {<a name="line.125"></a>
+<span class="sourceLineNo">126</span>                getLog().debug("Using bundled r.js");<a name="line.126"></a>
+<span class="sourceLineNo">127</span>                inputStream = getClass().getResourceAsStream("/org/jszip/maven/r.js");<a name="line.127"></a>
+<span class="sourceLineNo">128</span>            }<a name="line.128"></a>
+<span class="sourceLineNo">129</span>            source = IOUtil.toString(inputStream, "UTF-8");<a name="line.129"></a>
+<span class="sourceLineNo">130</span>            if (source.startsWith("#!")) {<a name="line.130"></a>
+<span class="sourceLineNo">131</span>                int i1 = source.indexOf('\n');<a name="line.131"></a>
+<span class="sourceLineNo">132</span>                int i2 = source.indexOf('\r');<a name="line.132"></a>
+<span class="sourceLineNo">133</span>                int index = (i1 == -1 || i2 == -1) ? Math.max(i1, i2) : Math.min(i1, i2);<a name="line.133"></a>
+<span class="sourceLineNo">134</span>                if (index &gt; 0) {<a name="line.134"></a>
+<span class="sourceLineNo">135</span>                    source = source.substring(index);<a name="line.135"></a>
+<span class="sourceLineNo">136</span>                    lineNo++;<a name="line.136"></a>
+<span class="sourceLineNo">137</span>                }<a name="line.137"></a>
+<span class="sourceLineNo">138</span>            }<a name="line.138"></a>
+<span class="sourceLineNo">139</span>        } catch (IOException e) {<a name="line.139"></a>
+<span class="sourceLineNo">140</span>            throw new MojoExecutionException(e.getMessage(), e);<a name="line.140"></a>
+<span class="sourceLineNo">141</span>        } finally {<a name="line.141"></a>
+<span class="sourceLineNo">142</span>            IOUtil.close(reader);<a name="line.142"></a>
+<span class="sourceLineNo">143</span>            IOUtil.close(inputStream);<a name="line.143"></a>
+<span class="sourceLineNo">144</span>        }<a name="line.144"></a>
+<span class="sourceLineNo">145</span><a name="line.145"></a>
+<span class="sourceLineNo">146</span>        String sourceVersion = "unknown";<a name="line.146"></a>
+<span class="sourceLineNo">147</span>        Pattern rJsVersionPattern = Pattern.compile(R_JS_VERSION_REGEX);<a name="line.147"></a>
+<span class="sourceLineNo">148</span>        Matcher rJsVersionMatcher = rJsVersionPattern.matcher(source);<a name="line.148"></a>
+<span class="sourceLineNo">149</span>        if (rJsVersionMatcher.find()) {<a name="line.149"></a>
+<span class="sourceLineNo">150</span>            sourceVersion = rJsVersionMatcher.group(1);<a name="line.150"></a>
+<span class="sourceLineNo">151</span>        }<a name="line.151"></a>
+<span class="sourceLineNo">152</span><a name="line.152"></a>
+<span class="sourceLineNo">153</span>        getLog().info("Using r.js version " + sourceVersion);<a name="line.153"></a>
+<span class="sourceLineNo">154</span><a name="line.154"></a>
+<span class="sourceLineNo">155</span>        List&lt;PseudoFileSystem.Layer&gt; layers = buildVirtualFileSystemLayers();<a name="line.155"></a>
+<span class="sourceLineNo">156</span><a name="line.156"></a>
+<span class="sourceLineNo">157</span>        final ContextFactory contextFactory = new ShellContextFactory();<a name="line.157"></a>
+<span class="sourceLineNo">158</span>        final Global global = new Global();<a name="line.158"></a>
+<span class="sourceLineNo">159</span>        global.initQuitAction(new QuitAction() {<a name="line.159"></a>
+<span class="sourceLineNo">160</span>            public void quit(Context context, int exitCode) {<a name="line.160"></a>
+<span class="sourceLineNo">161</span>                if (exitCode != 0) {<a name="line.161"></a>
+<span class="sourceLineNo">162</span>                    throw new JavaScriptTerminationException("Script exited with exit code of " + exitCode, exitCode);<a name="line.162"></a>
+<span class="sourceLineNo">163</span>                }<a name="line.163"></a>
+<span class="sourceLineNo">164</span>            }<a name="line.164"></a>
+<span class="sourceLineNo">165</span>        });<a name="line.165"></a>
+<span class="sourceLineNo">166</span>        if (!global.isInitialized()) {<a name="line.166"></a>
+<span class="sourceLineNo">167</span>            global.init(contextFactory);<a name="line.167"></a>
+<span class="sourceLineNo">168</span>        }<a name="line.168"></a>
+<span class="sourceLineNo">169</span>        DirectoryScanner scanner = new DirectoryScanner();<a name="line.169"></a>
+<span class="sourceLineNo">170</span><a name="line.170"></a>
+<span class="sourceLineNo">171</span>        scanner.setBasedir(contentDirectory);<a name="line.171"></a>
+<span class="sourceLineNo">172</span><a name="line.172"></a>
+<span class="sourceLineNo">173</span>        if (includes != null &amp;&amp; !includes.isEmpty()) {<a name="line.173"></a>
+<span class="sourceLineNo">174</span>            scanner.setIncludes(processIncludesExcludes(includes));<a name="line.174"></a>
+<span class="sourceLineNo">175</span>        } else {<a name="line.175"></a>
+<span class="sourceLineNo">176</span>            scanner.setIncludes(new String[]{"**/*.js"});<a name="line.176"></a>
+<span class="sourceLineNo">177</span>        }<a name="line.177"></a>
+<span class="sourceLineNo">178</span><a name="line.178"></a>
+<span class="sourceLineNo">179</span>        if (excludes != null &amp;&amp; !excludes.isEmpty()) {<a name="line.179"></a>
+<span class="sourceLineNo">180</span>            scanner.setExcludes(processIncludesExcludes(excludes));<a name="line.180"></a>
+<span class="sourceLineNo">181</span>        } else {<a name="line.181"></a>
+<span class="sourceLineNo">182</span>            scanner.setExcludes(new String[]{"r.js"});<a name="line.182"></a>
+<span class="sourceLineNo">183</span>        }<a name="line.183"></a>
+<span class="sourceLineNo">184</span><a name="line.184"></a>
+<span class="sourceLineNo">185</span>        scanner.scan();<a name="line.185"></a>
+<span class="sourceLineNo">186</span><a name="line.186"></a>
+<span class="sourceLineNo">187</span>        for (String path : scanner.getIncludedFiles()) {<a name="line.187"></a>
+<span class="sourceLineNo">188</span>            File profileJs = new File(contentDirectory, path);<a name="line.188"></a>
+<span class="sourceLineNo">189</span>            PseudoFileSystem.Layer[] layersArray = layers.toArray(new PseudoFileSystem.Layer[layers.size() + 1]);<a name="line.189"></a>
+<span class="sourceLineNo">190</span>            layersArray[layers.size()] = new PseudoFileSystem.FileLayer("build", profileJs.getParentFile());<a name="line.190"></a>
+<span class="sourceLineNo">191</span>            try {<a name="line.191"></a>
+<span class="sourceLineNo">192</span>                Object rv = contextFactory<a name="line.192"></a>
+<span class="sourceLineNo">193</span>                        .call(new OptimizeContextAction(getLog(), global, profileJs, source, lineNo, layersArray));<a name="line.193"></a>
+<span class="sourceLineNo">194</span>                if (rv instanceof Number) {<a name="line.194"></a>
+<span class="sourceLineNo">195</span>                    if (((Number) rv).intValue() != 0) {<a name="line.195"></a>
+<span class="sourceLineNo">196</span>                        throw new MojoExecutionException(<a name="line.196"></a>
+<span class="sourceLineNo">197</span>                                "Non-zero exit code of " + ((Number) rv).intValue()<a name="line.197"></a>
+<span class="sourceLineNo">198</span>                                        + " when trying to optimize profile " + profileJs);<a name="line.198"></a>
+<span class="sourceLineNo">199</span>                    }<a name="line.199"></a>
+<span class="sourceLineNo">200</span>                }<a name="line.200"></a>
+<span class="sourceLineNo">201</span>            } catch (JavaScriptException e) {<a name="line.201"></a>
+<span class="sourceLineNo">202</span>                throw new MojoExecutionException(<a name="line.202"></a>
+<span class="sourceLineNo">203</span>                        "Uncaught exception when trying to optimize profile " + profileJs, e);<a name="line.203"></a>
+<span class="sourceLineNo">204</span>            } catch (JavaScriptTerminationException e) {<a name="line.204"></a>
+<span class="sourceLineNo">205</span>                throw new MojoExecutionException(<a name="line.205"></a>
+<span class="sourceLineNo">206</span>                        "Non-zero exit code of " + e.getExitCode() + " when trying to optimize profile " + profileJs);<a name="line.206"></a>
+<span class="sourceLineNo">207</span>            }<a name="line.207"></a>
+<span class="sourceLineNo">208</span>        }<a name="line.208"></a>
+<span class="sourceLineNo">209</span>    }<a name="line.209"></a>
+<span class="sourceLineNo">210</span><a name="line.210"></a>
+<span class="sourceLineNo">211</span>}<a name="line.211"></a>
 
 
 
@@ -441,6 +277,7 @@
 
 
 
-</PRE>
-</BODY>
-</HTML>
+</pre>
+</div>
+</body>
+</html>

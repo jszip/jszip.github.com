@@ -1,1 +1,4 @@
+org.jszip.jetty
+org.jszip.less
 org.jszip.pseudo
+org.jszip.sass

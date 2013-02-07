@@ -1,4 +1,7 @@
+org.jszip.css
 org.jszip.jetty
+org.jszip.less
 org.jszip.maven
 org.jszip.pseudo.io
 org.jszip.rhino
+org.jszip.sass
